@@ -1,152 +1,201 @@
-import Cocoa
+import Foundation
 
-// MARK: - Storage Keys
+/// Everything the user can tune. Stored as one JSON blob in UserDefaults.
+nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
 
-enum StorageKey: String {
-    case height = "overlayHeight"
-    case opacity = "overlayOpacity"
-    case material = "overlayMaterial"
-    case enabled = "overlayEnabled"
-    case blendingMode = "overlayBlendingMode"
-    case backgroundOpacity = "backgroundOpacity"
-    case launchAtLogin = "launchAtLogin"
-    case useCustomColor = "useCustomColor"
-    case customColor = "customColor"
-    case useGradient = "useGradient"
-    case animationsEnabled = "animationsEnabled"
-}
+    enum Style: String, Codable, CaseIterable, Identifiable, Sendable {
+        case glass
+        case clearGlass
+        case blur
 
-// MARK: - Material Definitions
+        var id: String { rawValue }
 
-struct MaterialOption {
-    let name: String
-    let material: NSVisualEffectView.Material
-}
-
-struct BlendingModeOption {
-    let name: String
-    let mode: NSVisualEffectView.BlendingMode
-}
-
-// MARK: - Configuration Model
-
-struct OverlayConfiguration {
-    var height: CGFloat
-    var opacity: Double
-    var materialIndex: Int
-    var isEnabled: Bool
-    var blendingModeIndex: Int
-    var backgroundOpacity: Double
-    var launchAtLogin: Bool
-    var useCustomColor: Bool
-    var customColor: NSColor
-    var useGradient: Bool
-    var animationsEnabled: Bool
-
-    // MARK: - Default Values
-
-    static let defaultHeight: CGFloat = 50
-    static let defaultOpacity: Double = 0.9
-    static let defaultMaterialIndex: Int = 0
-    static let defaultIsEnabled: Bool = true
-    static let defaultBlendingModeIndex: Int = 0
-    static let defaultBackgroundOpacity: Double = 0.85
-    static let defaultLaunchAtLogin: Bool = false
-    static let defaultUseCustomColor: Bool = false
-    static let defaultCustomColor: NSColor = .windowBackgroundColor
-    static let defaultUseGradient: Bool = false
-    static let defaultAnimationsEnabled: Bool = true
-
-    // MARK: - Material Options
-
-    static let materials: [MaterialOption] = [
-        MaterialOption(name: "Under Window Background (Best)", material: .underWindowBackground),
-        MaterialOption(name: "Window Background", material: .windowBackground),
-        MaterialOption(name: "Titlebar", material: .titlebar),
-        MaterialOption(name: "Menu", material: .menu),
-        MaterialOption(name: "Popover", material: .popover),
-        MaterialOption(name: "Header View", material: .headerView),
-        MaterialOption(name: "Sheet", material: .sheet),
-        MaterialOption(name: "HUD Window", material: .hudWindow),
-        MaterialOption(name: "Sidebar", material: .sidebar),
-        MaterialOption(name: "Content Background", material: .contentBackground)
-    ]
-
-    // MARK: - Blending Mode Options
-
-    static let blendingModes: [BlendingModeOption] = [
-        BlendingModeOption(name: "Behind Window", mode: .behindWindow),
-        BlendingModeOption(name: "Within Window", mode: .withinWindow)
-    ]
-
-    // MARK: - Initializers
-
-    init(
-        height: CGFloat = defaultHeight,
-        opacity: Double = defaultOpacity,
-        materialIndex: Int = defaultMaterialIndex,
-        isEnabled: Bool = defaultIsEnabled,
-        blendingModeIndex: Int = defaultBlendingModeIndex,
-        backgroundOpacity: Double = defaultBackgroundOpacity,
-        launchAtLogin: Bool = defaultLaunchAtLogin,
-        useCustomColor: Bool = defaultUseCustomColor,
-        customColor: NSColor = defaultCustomColor,
-        useGradient: Bool = defaultUseGradient,
-        animationsEnabled: Bool = defaultAnimationsEnabled
-    ) {
-        self.height = height
-        self.opacity = opacity
-        self.materialIndex = materialIndex
-        self.isEnabled = isEnabled
-        self.blendingModeIndex = blendingModeIndex
-        self.backgroundOpacity = backgroundOpacity
-        self.launchAtLogin = launchAtLogin
-        self.useCustomColor = useCustomColor
-        self.customColor = customColor
-        self.useGradient = useGradient
-        self.animationsEnabled = animationsEnabled
-    }
-
-    // MARK: - Computed Properties
-
-    var material: NSVisualEffectView.Material {
-        guard materialIndex >= 0 && materialIndex < Self.materials.count else {
-            return Self.materials[Self.defaultMaterialIndex].material
+        var title: String {
+            switch self {
+            case .glass: "Liquid Glass"
+            case .clearGlass: "Clear Glass"
+            case .blur: "Blur"
+            }
         }
-        return Self.materials[materialIndex].material
     }
 
-    var blendingMode: NSVisualEffectView.BlendingMode {
-        guard blendingModeIndex >= 0 && blendingModeIndex < Self.blendingModes.count else {
-            return Self.blendingModes[Self.defaultBlendingModeIndex].mode
+    /// NSVisualEffectView materials, by name so the stored value survives reordering.
+    enum BlurMaterial: String, Codable, CaseIterable, Identifiable, Sendable {
+        case underWindowBackground
+        case windowBackground
+        case titlebar
+        case menu
+        case popover
+        case headerView
+        case sheet
+        case hudWindow
+        case sidebar
+        case contentBackground
+        case fullScreenUI
+        case toolTip
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .underWindowBackground: "Under Window Background"
+            case .windowBackground: "Window Background"
+            case .titlebar: "Titlebar"
+            case .menu: "Menu"
+            case .popover: "Popover"
+            case .headerView: "Header View"
+            case .sheet: "Sheet"
+            case .hudWindow: "HUD Window"
+            case .sidebar: "Sidebar"
+            case .contentBackground: "Content Background"
+            case .fullScreenUI: "Full Screen UI"
+            case .toolTip: "Tool Tip"
+            }
         }
-        return Self.blendingModes[blendingModeIndex].mode
+
+        /// Order used by the Max 1.0 material popup, for migrating `overlayMaterial`.
+        static let legacyOrder: [BlurMaterial] = [
+            .underWindowBackground, .windowBackground, .titlebar, .menu, .popover,
+            .headerView, .sheet, .hudWindow, .sidebar, .contentBackground,
+        ]
     }
 
-    // MARK: - Validation
+    enum HeightMode: String, Codable, CaseIterable, Identifiable, Sendable {
+        case matchDock
+        case custom
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .matchDock: "Match Dock"
+            case .custom: "Custom"
+            }
+        }
+    }
+
+    struct Tint: Codable, Equatable, Sendable {
+        var isEnabled = false
+        var color = RGBAColor(red: 0.08, green: 0.08, blue: 0.1)
+        var strength = 0.35
+        /// Fade the tint out toward the top edge (a vertical gradient).
+        var fadesUpward = false
+
+        init(isEnabled: Bool = false, color: RGBAColor = RGBAColor(red: 0.08, green: 0.08, blue: 0.1), strength: Double = 0.35, fadesUpward: Bool = false) {
+            self.isEnabled = isEnabled
+            self.color = color
+            self.strength = strength
+            self.fadesUpward = fadesUpward
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let defaults = Tint()
+            isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? defaults.isEnabled
+            color = try container.decodeIfPresent(RGBAColor.self, forKey: .color) ?? defaults.color
+            strength = try container.decodeIfPresent(Double.self, forKey: .strength) ?? defaults.strength
+            fadesUpward = try container.decodeIfPresent(Bool.self, forKey: .fadesUpward) ?? defaults.fadesUpward
+        }
+    }
+
+    var isEnabled = true
+    var style: Style = .glass
+    var blurMaterial: BlurMaterial = .underWindowBackground
+    /// Whole-overlay alpha.
+    var opacity = 1.0
+    var heightMode: HeightMode = .matchDock
+    /// Points added to (or removed from) the Dock's reserved strip in `matchDock` mode.
+    var heightAdjustment = 0.0
+    /// Absolute thickness in points, used in `custom` mode.
+    var customHeight = 50.0
+    /// Radius of the two corners that face into the screen.
+    var cornerRadius = 0.0
+    var tint = Tint()
+    var animationsEnabled = true
+    /// Reveal and dismiss the bar along with an auto-hiding Dock. When off, the bar hides whenever the Dock auto-hides.
+    var mirrorsDockAutoHide = true
+    /// ⌃⌥⌘M toggles the bar from anywhere.
+    var globalShortcutEnabled = true
+
+    static let opacityRange = 0.1...1.0
+    static let heightAdjustmentRange = -40.0...120.0
+    static let customHeightRange = 20.0...300.0
+    static let cornerRadiusRange = 0.0...40.0
+    static let tintStrengthRange = 0.0...1.0
+
+    init() {}
+
+    // MARK: Codable (missing or unknown values fall back to defaults)
+
+    private enum CodingKeys: String, CodingKey {
+        case isEnabled, style, blurMaterial, opacity, heightMode, heightAdjustment, customHeight
+        case cornerRadius, tint, animationsEnabled, mirrorsDockAutoHide, globalShortcutEnabled
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = OverlayConfiguration()
+        isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? defaults.isEnabled
+        style = container.decodeEnum(Style.self, forKey: .style) ?? defaults.style
+        blurMaterial = container.decodeEnum(BlurMaterial.self, forKey: .blurMaterial) ?? defaults.blurMaterial
+        opacity = try container.decodeIfPresent(Double.self, forKey: .opacity) ?? defaults.opacity
+        heightMode = container.decodeEnum(HeightMode.self, forKey: .heightMode) ?? defaults.heightMode
+        heightAdjustment = try container.decodeIfPresent(Double.self, forKey: .heightAdjustment) ?? defaults.heightAdjustment
+        customHeight = try container.decodeIfPresent(Double.self, forKey: .customHeight) ?? defaults.customHeight
+        cornerRadius = try container.decodeIfPresent(Double.self, forKey: .cornerRadius) ?? defaults.cornerRadius
+        tint = try container.decodeIfPresent(Tint.self, forKey: .tint) ?? defaults.tint
+        animationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .animationsEnabled) ?? defaults.animationsEnabled
+        mirrorsDockAutoHide = try container.decodeIfPresent(Bool.self, forKey: .mirrorsDockAutoHide) ?? defaults.mirrorsDockAutoHide
+        globalShortcutEnabled = try container.decodeIfPresent(Bool.self, forKey: .globalShortcutEnabled) ?? defaults.globalShortcutEnabled
+        self = validated()
+    }
+
+    // MARK: Validation
 
     func validated() -> OverlayConfiguration {
         var config = self
-
-        // Validate height
-        config.height = max(20, min(300, config.height))
-
-        // Validate opacity
-        config.opacity = max(0.1, min(1.0, config.opacity))
-
-        // Validate background opacity
-        config.backgroundOpacity = max(0.0, min(1.0, config.backgroundOpacity))
-
-        // Validate material index
-        if config.materialIndex < 0 || config.materialIndex >= Self.materials.count {
-            config.materialIndex = Self.defaultMaterialIndex
-        }
-
-        // Validate blending mode index
-        if config.blendingModeIndex < 0 || config.blendingModeIndex >= Self.blendingModes.count {
-            config.blendingModeIndex = Self.defaultBlendingModeIndex
-        }
-
+        config.opacity = opacity.clamped(to: Self.opacityRange)
+        config.heightAdjustment = heightAdjustment.clamped(to: Self.heightAdjustmentRange)
+        config.customHeight = customHeight.clamped(to: Self.customHeightRange)
+        config.cornerRadius = cornerRadius.clamped(to: Self.cornerRadiusRange)
+        config.tint.strength = tint.strength.clamped(to: Self.tintStrengthRange)
         return config
+    }
+}
+
+// MARK: - Migration from Max 1.0
+
+extension OverlayConfiguration {
+
+    /// Keys written by Max 1.0, one UserDefaults entry per setting.
+    nonisolated static let legacyKeys = [
+        "overlayHeight", "overlayOpacity", "overlayMaterial", "overlayEnabled", "overlayBlendingMode",
+        "backgroundOpacity", "useCustomColor", "customColor", "useGradient", "animationsEnabled",
+    ]
+
+    /// Builds a configuration from the Max 1.0 per-key layout. Returns nil when none of those keys are present.
+    init?(legacyDefaults values: [String: Any], legacyColor: RGBAColor?) {
+        guard Self.legacyKeys.contains(where: { values[$0] != nil }) else { return nil }
+        var config = OverlayConfiguration()
+        if let enabled = values["overlayEnabled"] as? Bool { config.isEnabled = enabled }
+        if let opacity = values["overlayOpacity"] as? Double { config.opacity = opacity }
+        if let height = values["overlayHeight"] as? Double { config.customHeight = height }
+        if let index = values["overlayMaterial"] as? Int, BlurMaterial.legacyOrder.indices.contains(index) {
+            config.blurMaterial = BlurMaterial.legacyOrder[index]
+        }
+        if let useCustomColor = values["useCustomColor"] as? Bool { config.tint.isEnabled = useCustomColor }
+        if let legacyColor { config.tint.color = legacyColor }
+        if let strength = values["backgroundOpacity"] as? Double { config.tint.strength = strength }
+        if let gradient = values["useGradient"] as? Bool { config.tint.fadesUpward = gradient }
+        if let animations = values["animationsEnabled"] as? Bool { config.animationsEnabled = animations }
+        self = config.validated()
+    }
+}
+
+private extension KeyedDecodingContainer {
+    /// Decodes a raw-representable enum, treating unknown raw values like a missing key.
+    nonisolated func decodeEnum<T: RawRepresentable>(_ type: T.Type, forKey key: Key) -> T? where T.RawValue == String {
+        guard let raw = try? decodeIfPresent(String.self, forKey: key) else { return nil }
+        return T(rawValue: raw)
     }
 }

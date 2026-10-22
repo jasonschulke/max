@@ -41,9 +41,10 @@ class OverlayWindowController {
     // MARK: - Window Setup
 
     private func setupWindow() {
-        guard let screen = NSScreen.main else { return }
-        let fullFrame = screen.frame
-        let visibleFrame = screen.visibleFrame
+        // Get screen or use default frame
+        let screen = NSScreen.main ?? NSScreen.screens.first
+        let fullFrame = screen?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1080)
+        let visibleFrame = screen?.visibleFrame ?? NSRect(x: 0, y: 25, width: 1920, height: 1055)
 
         let overlayHeight = configService.configuration.height
         let dockHeight = visibleFrame.minY - fullFrame.minY
@@ -274,9 +275,9 @@ class OverlayWindowController {
     // MARK: - Private Methods
 
     private func updateFrame() {
-        guard let screen = NSScreen.main else { return }
-        let fullFrame = screen.frame
-        let visibleFrame = screen.visibleFrame
+        let screen = NSScreen.main ?? NSScreen.screens.first
+        let fullFrame = screen?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1080)
+        let visibleFrame = screen?.visibleFrame ?? NSRect(x: 0, y: 25, width: 1920, height: 1055)
         let config = configService.configuration
         let newHeight = config.height
         let dockHeight = visibleFrame.minY - fullFrame.minY

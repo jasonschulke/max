@@ -1,7 +1,7 @@
 import Cocoa
 import Combine
 
-@MainActor
+@main
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Properties
@@ -15,20 +15,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Application Lifecycle
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        NSLog("=== AppDelegate: applicationDidFinishLaunching called ===")
+
         // Initialize configuration service
+        NSLog("AppDelegate: Creating ConfigurationService")
         configService = ConfigurationService()
 
         // Setup menu bar
+        NSLog("AppDelegate: Creating MenuBarManager")
         menuBarManager = MenuBarManager(delegate: self)
 
         // Setup overlay window
+        NSLog("AppDelegate: Creating OverlayWindowController")
         overlayWindowController = OverlayWindowController(configService: configService)
 
         // Setup settings window
+        NSLog("AppDelegate: Creating SettingsWindowController")
         settingsWindowController = SettingsWindowController(configService: configService)
 
+        // Show settings window on first launch
+        NSLog("AppDelegate: Showing settings window")
+        settingsWindowController.show()
+
         // Subscribe to configuration changes
+        NSLog("AppDelegate: Setting up configuration observers")
         setupConfigurationObservers()
+
+        NSLog("=== AppDelegate: Initialization complete ===")
     }
 
     // MARK: - Configuration Observers

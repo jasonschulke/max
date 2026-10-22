@@ -1,127 +1,101 @@
-# Max - macOS Dock Customization Utility
+# Max
 
-A lightweight macOS menu bar application that overlays a customizable visual effect on the Dock region, enabling full control over colors, materials, and visual effects.
+A menu bar utility that stretches the macOS Dock into a full-width bar. Max draws a Liquid Glass
+(or blur) strip across the Dock's edge of the primary display, sized to the Dock itself, so the Dock
+reads as one continuous bar instead of a floating pill.
+
+Requires macOS 26 or later.
 
 ## Features
 
-### Visual Customization
-- **Adjustable Height** - Control overlay height from 20-300px with live preview
-- **Custom Colors & Gradients** - Apply solid colors or vertical gradients to the Dock background
-- **Material Effects** - Choose from 10 macOS visual effect materials (blur styles)
-- **Blending Modes** - Behind Window or Within Window blending
-- **Dual Opacity Controls** - Separate opacity for effect layer and background layer
-- **Smooth Animations** - Optional animated transitions for all visual changes
+- **Liquid Glass** — the same material the Dock uses on macOS 26, with Clear Glass and classic
+  blur materials as alternatives.
+- **Sized from the Dock** — the bar matches the strip macOS reserves for the Dock and follows it
+  when the Dock is resized, moved to another edge, or set to auto-hide. A manual height is available too.
+- **Auto-hide aware** — when the Dock auto-hides, the bar slides in and out with it, using the Dock's
+  own reveal delay. No Accessibility permission needed.
+- **Tint** — flat or fading color wash over the material.
+- **Rounded corners** — only the corners facing into the screen are rounded.
+- **Global shortcut** — ⌃⌥⌘M toggles the bar from any app.
+- **Light and dark** — the material adapts on its own.
+- **Launch at login** via `SMAppService`.
 
-### User Experience
-- **Menu Bar Integration** - Quick toggle and settings access from the menu bar
-- **Launch at Login** - Automatically start Max when you log in (macOS 13+)
-- **Multi-Display Support** - Automatically adapts to screen configuration changes
-- **Universal Spaces** - Overlay persists across all virtual desktops
-- **Non-Intrusive** - Overlay ignores all mouse events, won't interfere with Dock interaction
+## Building
 
-### Settings Management
-- **Live Preview** - All changes apply immediately with visual feedback
-- **Persistent Configuration** - Settings automatically saved using UserDefaults
-- **Reset to Defaults** - One-click restoration of default settings
+### With Xcode 26
 
-## Architecture
+Open `Max.xcodeproj` and run the `Max` scheme. The `MaxTests` scheme runs the model tests.
 
-Max features a modern, reactive architecture built with Swift and Combine:
+### Without Xcode (Command Line Tools only)
 
-```
-Max/
-├── main.swift                          # Application entry point
-├── AppDelegate.swift                   # Application lifecycle coordinator
-├── Services/
-│   └── ConfigurationService.swift      # Centralized state management with Combine
-├── Windows/
-│   ├── OverlayWindowController.swift   # Dock overlay rendering and positioning
-│   └── SettingsWindowController.swift  # Settings UI and user interactions
-├── Managers/
-│   ├── PersistenceManager.swift        # UserDefaults persistence layer
-│   ├── MenuBarManager.swift            # NSStatusBar menu integration
-│   └── LaunchAtLoginManager.swift      # Login item management (macOS 13+)
-├── Models/
-│   └── OverlayConfiguration.swift      # Configuration model with validation
-└── Utilities/
-    └── GradientLayerFactory.swift      # CAGradientLayer creation helper
+```bash
+make          # builds Max.app (universal, ad-hoc signed)
+make test     # runs the model tests
+make run      # builds and launches
+make install  # copies Max.app to /Applications
 ```
 
-### Key Design Patterns
-
-**Reactive State Management**
-- Single source of truth via `ConfigurationService`
-- Automatic UI updates through Combine publishers
-- Debounced auto-save (100ms) for smooth user experience
-- No manual state synchronization required
-
-**Separation of Concerns**
-- Services handle business logic and state
-- Controllers manage UI and user interactions
-- Managers encapsulate system integrations
-- Models define data structures and validation
-
-**Memory Safety**
-- All Combine subscriptions use `[weak self]` to prevent retain cycles
-- Proper cleanup in `deinit` for NotificationCenter observers
-- No force unwrapping in production code paths
-
-## Technical Implementation
-
-### Overlay Window Positioning
-The overlay uses `NSScreen.main.visibleFrame` to calculate Dock position, accounting for both full screen height and visible frame to handle auto-hiding Dock configurations.
-
-### Visual Effect Composition
-Layered rendering approach:
-1. **Background View** - Custom color/gradient or system color layer
-2. **Effect View** - NSVisualEffectView with configurable material and blending
-3. **Container View** - Manages subview hierarchy and frame updates
-
-### Configuration Persistence
-Uses `NSKeyedArchiver` with secure coding for NSColor serialization, with graceful fallback to legacy decoding for backward compatibility.
-
-### Screen Change Handling
-Observes `NSApplication.didChangeScreenParametersNotification` to automatically reposition overlay when display configuration changes (resolution, arrangement, etc.).
-
-## Requirements
-
-- **macOS**: 11.0+ (Big Sur or later)
-- **Launch at Login**: Requires macOS 13.0+ (Ventura or later)
-- **Xcode**: 14.0+ for building
-- **Framework**: AppKit + Combine
-
-## Building & Running
-
-1. Clone the repository
-2. Open `Max.xcodeproj` in Xcode
-3. Build and run (⌘R)
-4. Grant any required permissions if prompted
-
-The app will appear in your menu bar as "M".
+`Max.app` is built in the repository root and is ignored by git.
 
 ## Usage
 
-1. **Access Settings** - Click "M" in menu bar → Settings...
-2. **Configure Appearance** - Adjust height, colors, materials, and opacity to your preference
-3. **Toggle Overlay** - Menu bar → Toggle Overlay or press ⌘T
-4. **Enable Overlay** - Check "Enable Overlay" in settings to activate
+Max lives in the menu bar (the dock icon). The menu toggles the bar, opens Settings, and quits.
 
-### Recommended Settings for Best Dock Coverage
+| Setting | What it does |
+|---|---|
+| Style | Liquid Glass, Clear Glass, or Blur (with a material picker) |
+| Opacity | Whole-bar alpha |
+| Corner radius | Rounds the inward-facing corners |
+| Height | *Match Dock* follows the Dock's reserved strip, with an adjustment slider. *Custom* is an absolute height. |
+| Tint | Color wash, with strength and an optional fade toward the screen |
+| Animate changes | Fade and resize smoothly. Sliders always track the pointer without animation. |
+| Follow the Dock when it auto-hides | Mirror the Dock's reveal. When off, the bar stays hidden while the Dock auto-hides. |
+| Toggle with ⌃⌥⌘M | Enables the global shortcut |
+| Launch at login | Registers Max as a login item |
 
-For optimal Dock coverage, try these settings:
-- **Material**: Under Window Background (Best)
-- **Background Opacity**: 85-95%
-- **Effect Opacity**: 90-100%
-- **Height**: Adjust to match your Dock size
+Settings are stored as a single JSON value under `configuration` in `~/Library/Preferences/jasonschulke.Max.plist`.
+Settings from Max 1.0 migrate automatically on first launch.
+
+## How it works
+
+- **Geometry** — the Dock's strip is the gap between `NSScreen.frame` and `NSScreen.visibleFrame`
+  on the Dock's edge of the primary display (the screen whose origin is `0,0`). Orientation,
+  auto-hide, and tile size come from the `com.apple.dock` preferences domain; Max refreshes on
+  `com.apple.dock.prefchanged` and on screen-parameter changes.
+- **Auto-hide** — while the Dock auto-hides, macOS reserves no strip, so the bar's thickness is
+  estimated from the Dock's tile size (tile size + 13 pt, measured on macOS 26). A global
+  mouse-moved monitor reveals the bar when the pointer touches the Dock's edge and dismisses it
+  when the pointer leaves.
+- **Window** — a borderless, click-through `NSWindow` one level below the Dock
+  (`kCGDockWindowLevel - 1`), on every Space, stationary in Mission Control. It hangs
+  `cornerRadius` points off the screen edge so only the inward corners show their radius.
+- **Material** — `NSGlassEffectView` for the glass styles, `NSVisualEffectView` for blur. Tints go
+  through the glass view's `tintColor`, or a gradient layer when fading.
+- **State** — one `@Observable` store. The overlay controller consumes an `Observations` stream of
+  the store, the Dock observer, and the reveal tracker, and applies each snapshot. Changes animate
+  unless a slider is being dragged.
+
+## Limitations
+
+- The bar lives on the primary display. If the Dock is summoned on another display, the bar does
+  not follow it.
+- The auto-hide thickness is an estimate; use *Custom* height if it does not line up.
+- The global shortcut is fixed at ⌃⌥⌘M.
+
+## Project layout
+
+```
+Max/
+├── App/        MaxApp (SwiftUI MenuBarExtra + Settings scene), AppDelegate
+├── Models/     OverlayConfiguration, DockGeometry, RGBAColor — pure, tested
+├── Services/   SettingsStore, DockObserver, DockRevealTracker, GlobalHotKey, LaunchAtLogin
+├── Overlay/    OverlayWindow, OverlayBackdropView, OverlayController
+├── Settings/   SettingsView
+└── Resources/  Info.plist, Assets.xcassets
+Tests/          Model tests with a small runner (no XCTest dependency)
+Makefile        Command Line Tools build
+```
 
 ## License
 
-MIT License - see LICENSE file for details
-
-## Author
-
-Jason Schulke
-
-## Version
-
-1.0.0
+MIT — see `LICENSE`.

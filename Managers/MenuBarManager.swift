@@ -26,8 +26,21 @@ class MenuBarManager {
     private func setupMenuBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
+        NSLog("MenuBarManager: Setting up menu bar")
+        NSLog("MenuBarManager: statusItem created: \(statusItem != nil)")
+
         if let button = statusItem?.button {
-            button.title = "M"
+            NSLog("MenuBarManager: Button exists")
+            // Try SF Symbol first, fallback to text
+            if let image = NSImage(systemSymbolName: "dock.rectangle", accessibilityDescription: "Max") {
+                NSLog("MenuBarManager: Using SF Symbol icon")
+                button.image = image
+            } else {
+                NSLog("MenuBarManager: SF Symbol not available, using text")
+                button.title = "Max"
+            }
+        } else {
+            NSLog("MenuBarManager: ERROR - Button is nil!")
         }
 
         let menu = NSMenu()

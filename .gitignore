@@ -1,0 +1,12 @@
+# Build products
+/build/
+/Max.app
+*.dSYM
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+DerivedData/
+
+# macOS
+.DS_Store
