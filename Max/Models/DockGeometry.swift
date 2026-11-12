@@ -48,6 +48,17 @@ nonisolated enum DockGeometry {
     /// Measured on macOS 26 with a bottom Dock: tilesize 37 reserves a 50 pt strip.
     static let pillPadding = 13.0
 
+    /// The Dock's icon size range, and its mapping to the 0–1 fraction CoreDock's tile size calls use.
+    static let tileSizeRange = 16.0...128.0
+
+    static func tileFraction(forSize size: Double) -> Double {
+        (size.clamped(to: tileSizeRange) - tileSizeRange.lowerBound) / (tileSizeRange.upperBound - tileSizeRange.lowerBound)
+    }
+
+    static func tileSize(forFraction fraction: Double) -> Double {
+        tileSizeRange.lowerBound + fraction.clamped(to: 0...1) * (tileSizeRange.upperBound - tileSizeRange.lowerBound)
+    }
+
     /// The strip macOS keeps clear for the Dock: the gap between `frame` and `visibleFrame` on the Dock's edge.
     /// Zero when the Dock auto-hides (or lives on another display).
     static func reservedThickness(screenFrame: CGRect, visibleFrame: CGRect, orientation: DockOrientation) -> Double {
@@ -65,16 +76,17 @@ nonisolated enum DockGeometry {
         tileSize + pillPadding
     }
 
-    /// The bar's thickness for a configuration, before the off-screen corner extension.
+    /// The bar's thickness for a configuration. Drawing over the Dock, the bar always covers the Dock's whole strip
+    /// (or Apple's Dock would show above it) and can only grow past it.
     static func thickness(configuration: OverlayConfiguration, dock: DockInfo, screenFrame: CGRect, visibleFrame: CGRect) -> Double {
         let resolved: Double
-        switch configuration.heightMode {
+        switch configuration.skinsDock ? .matchDock : configuration.heightMode {
         case .custom:
             resolved = configuration.customHeight
         case .matchDock:
             let reserved = reservedThickness(screenFrame: screenFrame, visibleFrame: visibleFrame, orientation: dock.orientation)
             let base = reserved > 0 ? reserved : estimatedThickness(tileSize: dock.tileSize)
-            resolved = base + configuration.heightAdjustment
+            resolved = base + (configuration.skinsDock ? max(0, configuration.heightAdjustment) : configuration.heightAdjustment)
         }
         return max(1, resolved)
     }

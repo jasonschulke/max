@@ -24,22 +24,29 @@ let dockSkinTests: [TestCase] = [
         expectClose(Double(frame.maxY), 48.96)
         expectClose(Double(frame.minX), 25.96)
     },
-    TestCase(name: "icons sit centered in their slot at the Dock's size") {
+    TestCase(name: "icons keep the Dock's size and place along the bar, centered across it") {
         let slot = CGRect(x: 25.96, y: 5, width: 31.96, height: 43.96)
-        let icon = DockSkin.iconFrame(for: slot, orientation: .bottom)
+        let bar = CGRect(x: 0, y: 0, width: 1920, height: 50)
+        let icon = DockSkin.iconFrame(for: slot, in: bar, orientation: .bottom)
         // The visible icon is 80.5% of the image: about 24.8 pt, as measured on screen.
         expectClose(Double(icon.width) * 0.8047, 24.75, tolerance: 0.05)
         expectClose(Double(icon.midX), Double(slot.midX))
-        expectClose(Double(icon.midY), Double(slot.midY))
-        let side = DockSkin.iconFrame(for: CGRect(x: 0, y: 100, width: 44, height: 32), orientation: .left)
+        expectClose(Double(icon.midY), 25)
+        // A taller bar keeps the icon in its middle.
+        let tall = DockSkin.iconFrame(for: slot, in: CGRect(x: 0, y: 0, width: 1920, height: 80), orientation: .bottom)
+        expectClose(Double(tall.midY), 40)
+        expectClose(Double(tall.width), Double(icon.width))
+        let side = DockSkin.iconFrame(for: CGRect(x: 0, y: 100, width: 44, height: 32), in: CGRect(x: 0, y: 0, width: 60, height: 900), orientation: .left)
         expectClose(Double(side.width), 32 * DockSkin.iconFraction)
+        expectClose(Double(side.midX), 30)
     },
-    TestCase(name: "running indicators sit on the slot's screen-edge side") {
-        let slot = CGRect(x: 10, y: 5, width: 32, height: 44)
-        expectEqual(DockSkin.indicatorCenter(for: slot, orientation: .bottom), CGPoint(x: 26, y: 11))
-        let side = CGRect(x: 0, y: 100, width: 44, height: 32)
-        expectEqual(DockSkin.indicatorCenter(for: side, orientation: .left), CGPoint(x: 6, y: 116))
-        expectEqual(DockSkin.indicatorCenter(for: side, orientation: .right), CGPoint(x: 38, y: 116))
+    TestCase(name: "running indicators sit just past the visible icon, toward the screen edge") {
+        let icon = CGRect(x: 10, y: 10, width: 40, height: 40)
+        let bottom = DockSkin.indicatorCenter(for: icon, orientation: .bottom)
+        expectClose(Double(bottom.x), 30)
+        expectClose(Double(bottom.y), 10 + 40 * DockSkin.iconPadding - 4)
+        expectClose(Double(DockSkin.indicatorCenter(for: icon, orientation: .left).x), 10 + 40 * DockSkin.iconPadding - 4)
+        expectClose(Double(DockSkin.indicatorCenter(for: icon, orientation: .right).x), 50 - 40 * DockSkin.iconPadding + 4)
     },
     TestCase(name: "frames settle to half points") {
         expectEqual(DockSkin.settled(CGRect(x: 25.96, y: 5.1, width: 31.96, height: 43.96)), CGRect(x: 26, y: 5, width: 32, height: 44))

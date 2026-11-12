@@ -7,6 +7,8 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
         case glass
         case clearGlass
         case blur
+        /// No material: just the bar's color.
+        case solid
 
         var id: String { rawValue }
 
@@ -15,6 +17,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
             case .glass: "Liquid Glass"
             case .clearGlass: "Clear Glass"
             case .blur: "Blur"
+            case .solid: "Solid"
             }
         }
     }
@@ -102,6 +105,8 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     /// Sit over Apple's Dock and draw its icons where it draws them (needs Accessibility access),
     /// instead of sitting behind it.
     var skinsDock = false
+    /// The display the Dock is kept on (its CoreGraphics UUID), or nil to let it move freely.
+    var pinnedDisplay: String?
     var style: Style = .glass
     var blurMaterial: BlurMaterial = .underWindowBackground
     /// Alpha of the bar's material (and, behind Apple's Dock, of the whole bar).
@@ -131,7 +136,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     // MARK: Codable (missing or unknown values fall back to defaults)
 
     private enum CodingKeys: String, CodingKey {
-        case isEnabled, skinsDock, style, blurMaterial, opacity, heightMode, heightAdjustment, customHeight
+        case isEnabled, skinsDock, pinnedDisplay, style, blurMaterial, opacity, heightMode, heightAdjustment, customHeight
         case cornerRadius, tint, animationsEnabled, mirrorsDockAutoHide, globalShortcutEnabled
     }
 
@@ -140,6 +145,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
         let defaults = OverlayConfiguration()
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? defaults.isEnabled
         skinsDock = try container.decodeIfPresent(Bool.self, forKey: .skinsDock) ?? defaults.skinsDock
+        pinnedDisplay = try container.decodeIfPresent(String.self, forKey: .pinnedDisplay)
         style = container.decodeEnum(Style.self, forKey: .style) ?? defaults.style
         blurMaterial = container.decodeEnum(BlurMaterial.self, forKey: .blurMaterial) ?? defaults.blurMaterial
         opacity = try container.decodeIfPresent(Double.self, forKey: .opacity) ?? defaults.opacity

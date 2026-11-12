@@ -52,4 +52,5 @@ run([
     ("DockGeometry", dockGeometryTests),
     ("DockSkin", dockSkinTests),
     ("WindowCornerRadius", windowCornerRadiusTests),
+    ("DockPinning", dockPinningTests),
 ])

@@ -29,6 +29,13 @@ let dockGeometryTests: [TestCase] = [
         expectEqual(DockGeometry.reservedThickness(screenFrame: screen, visibleFrame: visibleRightDock, orientation: .right), 60)
         expectEqual(DockGeometry.reservedThickness(screenFrame: screen, visibleFrame: visibleNoDock, orientation: .bottom), 0)
     },
+    TestCase(name: "tile sizes map to CoreDock's fractions and back") {
+        // Measured: a tile size of 37 reads back from CoreDock as 0.1875.
+        expectClose(DockGeometry.tileFraction(forSize: 37), 0.1875)
+        expectClose(DockGeometry.tileSize(forFraction: 0.1875), 37)
+        expectEqual(DockGeometry.tileFraction(forSize: 4), 0)
+        expectEqual(DockGeometry.tileSize(forFraction: 2), 128)
+    },
     TestCase(name: "estimated thickness reproduces the measured Dock strip") {
         expectEqual(DockGeometry.estimatedThickness(tileSize: 37), 50)
     },
@@ -52,6 +59,16 @@ let dockGeometryTests: [TestCase] = [
         config.heightAdjustment = 40
         let thickness = DockGeometry.thickness(configuration: config, dock: DockInfo(), screenFrame: screen, visibleFrame: visibleBottomDock)
         expectEqual(thickness, 120)
+    },
+    TestCase(name: "drawing over the Dock, the bar covers the whole strip and only grows past it") {
+        var config = OverlayConfiguration()
+        config.skinsDock = true
+        config.heightMode = .custom
+        config.customHeight = 20
+        config.heightAdjustment = -15
+        expectEqual(DockGeometry.thickness(configuration: config, dock: DockInfo(), screenFrame: screen, visibleFrame: visibleBottomDock), 50)
+        config.heightAdjustment = 20
+        expectEqual(DockGeometry.thickness(configuration: config, dock: DockInfo(), screenFrame: screen, visibleFrame: visibleBottomDock), 70)
     },
     TestCase(name: "thickness never drops below one point") {
         var config = OverlayConfiguration()

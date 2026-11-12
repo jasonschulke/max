@@ -44,13 +44,13 @@ final class DockSkinView: NSView {
     }
 
     private func draw(_ item: SkinItem, in slot: NSRect) {
-        let icon = DockSkin.iconFrame(for: slot, orientation: orientation)
+        let icon = DockSkin.iconFrame(for: slot, in: bounds, orientation: orientation)
         switch item.kind {
         case .separator:
             let length = (orientation == .bottom ? slot.height : slot.width) * 0.6
             let line = orientation == .bottom
-                ? NSRect(x: slot.midX - 0.5, y: slot.midY - length / 2, width: 1, height: length)
-                : NSRect(x: slot.midX - length / 2, y: slot.midY - 0.5, width: length, height: 1)
+                ? NSRect(x: slot.midX - 0.5, y: icon.midY - length / 2, width: 1, height: length)
+                : NSRect(x: icon.midX - length / 2, y: slot.midY - 0.5, width: length, height: 1)
             NSColor.separatorColor.setFill()
             line.fill()
             return
@@ -64,7 +64,7 @@ final class DockSkinView: NSView {
             image(for: item)?.draw(in: icon, from: .zero, operation: .sourceOver, fraction: 1)
         }
         if item.isRunning {
-            drawIndicator(at: DockSkin.indicatorCenter(for: slot, orientation: orientation), active: item.isActive)
+            drawIndicator(at: DockSkin.indicatorCenter(for: icon, orientation: orientation), active: item.isActive)
         }
         if let badge = item.badge {
             drawBadge(badge, on: icon)

@@ -20,6 +20,7 @@ SOURCES       := $(shell find Max -name '*.swift' | sort)
 MODEL_SOURCES := $(sort $(wildcard Max/Models/*.swift))
 TEST_SOURCES  := $(sort $(wildcard Tests/*.swift))
 INFO_PLIST    := Max/Resources/Info.plist
+ICON          := Max/Resources/Max.icns
 
 SWIFT_FLAGS   := -swift-version 6 -default-isolation MainActor -parse-as-library -O -sdk $(SDK)
 BINARIES      := $(foreach arch,$(ARCHS),$(BUILD_DIR)/$(APP_NAME)-$(arch))
@@ -34,9 +35,10 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(SOURCES) Makefile
 	@mkdir -p $(BUILD_DIR)
 	swiftc $(SWIFT_FLAGS) -target $*-apple-macos$(MIN_MACOS) -o $@ $(SOURCES)
 
-$(APP)/Contents/MacOS/$(APP_NAME): $(BINARIES) $(INFO_PLIST) Makefile
+$(APP)/Contents/MacOS/$(APP_NAME): $(BINARIES) $(INFO_PLIST) $(ICON) Makefile
 	@mkdir -p $(APP)/Contents/MacOS $(APP)/Contents/Resources
 	lipo -create -output $@ $(BINARIES)
+	cp $(ICON) $(APP)/Contents/Resources/
 	sed -e 's/$$(EXECUTABLE_NAME)/$(APP_NAME)/g' \
 	    -e 's/$$(PRODUCT_NAME)/$(APP_NAME)/g' \
 	    -e 's/$$(PRODUCT_BUNDLE_IDENTIFIER)/$(BUNDLE_ID)/g' \

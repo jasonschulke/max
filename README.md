@@ -11,10 +11,11 @@ Requires macOS 26 or later.
 - **Liquid Glass** — the same material the Dock uses on macOS 26, with Clear Glass and classic
   blur materials as alternatives.
 - **Sized from the Dock** — the bar matches the strip macOS reserves for the Dock and follows it
-  when the Dock is resized, moved to another edge, or set to auto-hide. A manual height is available too.
+  when the Dock is resized, moved to another edge, or set to auto-hide. Max can resize the Dock itself,
+  and make the bar taller than the Dock with the icons kept centered.
 - **Auto-hide aware** — when the Dock auto-hides, the bar slides in and out with it, using the Dock's
   own reveal delay. No Accessibility permission needed.
-- **Tint** — flat or fading color wash over the material.
+- **Color** — a Solid style or a material over the bar's color, with a flat or fading tint.
 - **Rounded corners** — only the corners facing into the screen are rounded.
 - **Draw over the Dock (optional)** — Max covers Apple's Dock and draws its icons, running indicators,
   and badges exactly where the Dock draws them, so no floating pill shows. The Dock still handles
@@ -23,6 +24,7 @@ Requires macOS 26 or later.
   settings.
 - **Window corners** — set the corner radius of every app's windows, down to square, and relaunch
   open apps to apply it.
+- **Keep the Dock on one display** — pin the Dock to a chosen display.
 - **Global shortcut** — ⌃⌥⌘M toggles the bar from any app.
 - **Light and dark** — the material adapts on its own.
 - **Launch at login** via `SMAppService`.
@@ -42,7 +44,8 @@ make run      # builds and launches
 make install  # copies Max.app to /Applications
 ```
 
-`Max.app` is built in the repository root and is ignored by git.
+`Max.app` is built in the repository root and is ignored by git. The app icon is drawn by
+`swift Tools/make-icon.swift`, which writes `Max/Resources/Max.icns` and the asset catalog's PNGs.
 
 macOS ties Accessibility access to the app's signature, and an ad-hoc signature changes with every
 build. When *Draw over the Dock* is on and access is missing, Max clears its own stale entry and asks
@@ -51,22 +54,16 @@ again at launch; grant it in the prompt. Signing with a stable identity avoids t
 
 ## Usage
 
-Max lives in the menu bar (the dock icon). The menu toggles the bar, opens Settings, and quits.
+Max lives in the menu bar. The menu toggles the bar, opens Settings, and quits. Settings has a tab per area:
 
-| Setting | What it does |
+| Tab | Settings |
 |---|---|
-| Draw over the Dock | Covers Apple's Dock and draws its items where it draws them. Until Max has Accessibility access, the bar stays behind the Dock. |
-| Custom window corners | Sets the corner radius every app's windows use (macOS: 16 pt), down to *Square*. *Relaunch Finder* and *Relaunch Apps…* apply it to apps already open; Relaunch Apps lists the apps and asks first. |
-| Dock items › Edit… | Reorder (drag), add (apps, folders, spacers), and remove the Dock's items. Apply restarts the Dock; the first Apply keeps a backup you can restore. |
-| Style | Liquid Glass, Clear Glass, or Blur (with a material picker) |
-| Opacity | Whole-bar alpha |
-| Corner radius | Rounds the inward-facing corners |
-| Height | *Match Dock* follows the Dock's reserved strip, with an adjustment slider. *Custom* is an absolute height. |
-| Tint | Color wash, with strength and an optional fade toward the screen |
-| Animate changes | Fade and resize smoothly. Sliders always track the pointer without animation. |
-| Follow the Dock when it auto-hides | Mirror the Dock's reveal. When off, the bar stays hidden while the Dock auto-hides. |
-| Toggle with ⌃⌥⌘M | Enables the global shortcut |
-| Launch at login | Registers Max as a login item |
+| General | Show the bar, launch at login, animate changes, the ⌃⌥⌘M shortcut, reset to defaults |
+| Dock | *Draw over the Dock* (with Accessibility status). *Dock size* resizes Apple's Dock itself. *Extra height* makes the bar taller than the Dock, icons kept centered (behind the Dock: *Match Dock* or *Custom* height). *Keep the Dock on* pins the Dock to one display. Follow the Dock when it auto-hides. |
+| Appearance | A live preview; style (Liquid Glass, Clear Glass, Blur, Solid), opacity, and corner radius; a custom color with intensity and an optional fade toward the screen |
+| Dock Items | The Dock's apps, folders, and spacers, with a miniature of the result. Drag to rearrange, add, and remove; *Save* writes them to the Dock and restarts it, and the first save keeps a backup you can restore. |
+| Windows | The corner radius every app's windows use (macOS: 16 pt), down to *Square*, plus *Relaunch Finder* and *Relaunch Apps…* (which lists the apps and asks first) |
+| About | Version and links |
 
 Settings are stored as a single JSON value under `configuration` in `~/Library/Preferences/jasonschulke.Max.plist`.
 Settings from Max 1.0 migrate automatically on first launch.
@@ -97,6 +94,13 @@ Settings from Max 1.0 migrate automatically on first launch.
   Dock's own drag feedback shows.
 - **Dock item editor** — edits `persistent-apps` and `persistent-others` in `com.apple.dock`, keeping
   the Dock's own entries intact, then restarts the Dock (`killall Dock`), as `dockutil` does.
+- **Dock size** — set live through `CoreDockSetTileSize`, the private call System Settings uses, looked
+  up at run time so the control simply disappears if a macOS update removes it. A Dock too full for the
+  screen is already shrunk to fit its width, so it can only get smaller.
+- **Keeping the Dock on a display** — macOS moves the Dock to whichever display's Dock edge the
+  pointer is pushed against (with *Displays have separate Spaces* on). Max installs an event tap that
+  stops the pointer two points short of that edge on every other display, except where another display
+  continues past it, and drops the push. Needs Accessibility access.
 - **Window corners** — AppKit reads the undocumented global default `NSConvolutionOverride1` as the
   window corner radius when an app launches (verified on macOS 27). Zero and negative values are
   ignored, so *Square* stores 0.01. Equivalent to `defaults write -g NSConvolutionOverride1 -float 0.01`;
@@ -117,6 +121,8 @@ Settings from Max 1.0 migrate automatically on first launch.
   looks empty.
 - Window corners rely on an undocumented macOS default; an update could change or drop it. Apps that
   draw their own window frames are not affected.
+- Max cannot move the Dock to the pinned display itself (simulated pushes do not move it); push the
+  pointer against that display's edge once, and Max keeps it there.
 - The global shortcut is fixed at ⌃⌥⌘M.
 
 ## Project layout
@@ -124,12 +130,13 @@ Settings from Max 1.0 migrate automatically on first launch.
 ```
 Max/
 ├── App/        MaxApp (SwiftUI MenuBarExtra + Settings scene), AppDelegate
-├── Models/     OverlayConfiguration, DockGeometry, DockSkin, WindowCornerRadius, RGBAColor — pure, tested
-├── Services/   SettingsStore, DockObserver, DockSkinTracker, DockEditor, WindowCornerOverride, DockRevealTracker, GlobalHotKey, LaunchAtLogin
+├── Models/     OverlayConfiguration, DockGeometry, DockSkin, DockPinning, WindowCornerRadius, RGBAColor — pure, tested
+├── Services/   SettingsStore, DockObserver, DockSkinTracker, DockEditor, DockSize, DockPinner, WindowCornerOverride, DockRevealTracker, GlobalHotKey, LaunchAtLogin
 ├── Overlay/    OverlayWindow, OverlayBackdropView, OverlayController, DockSkinView
 ├── Settings/   SettingsView, DockEditorView
-└── Resources/  Info.plist, Assets.xcassets
+└── Resources/  Info.plist, Assets.xcassets, Max.icns
 Tests/          Model tests with a small runner (no XCTest dependency)
+Tools/          make-icon.swift draws the app icon
 Makefile        Command Line Tools build
 ```
 

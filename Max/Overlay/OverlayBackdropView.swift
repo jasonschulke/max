@@ -30,7 +30,8 @@ final class OverlayBackdropView: NSView {
         let radius = CGFloat(configuration.cornerRadius)
         let tint = opaque ? OverlayConfiguration.Tint() : configuration.tint
         tintView.apply(tint, orientation: orientation)
-        baseView.isHidden = !opaque
+        // The Solid style is the base alone: the bar's color, no material.
+        baseView.isHidden = !(opaque || configuration.style == .solid)
         baseView.cornerRadius = radius
         baseView.orientation = orientation
         baseView.tint = configuration.tint
@@ -80,6 +81,12 @@ final class OverlayBackdropView: NSView {
             } else {
                 tintView.removeFromSuperview()
             }
+
+        case .solid:
+            glassView.isHidden = true
+            glassView.contentView = nil
+            blurView.isHidden = true
+            tintView.removeFromSuperview()
         }
     }
 

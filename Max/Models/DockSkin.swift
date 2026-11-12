@@ -31,8 +31,10 @@ nonisolated struct SkinItem: Equatable, Sendable {
 nonisolated enum DockSkin {
     /// Apple's Dock draws an icon image at this fraction of its slot's length along the Dock, centered in the slot.
     static let iconFraction = 0.9625
-    /// The running indicator's center sits this far inside the slot's screen-edge side.
-    static let indicatorInset = 6.0
+    /// Transparent padding around the visible icon, as a fraction of the icon image (macOS icons fill 80.5%).
+    static let iconPadding = (1 - 0.8047) / 2
+    /// Gap between the visible icon's edge and the running indicator's center.
+    static let indicatorGap = 4.0
 
     static func kind(forSubrole subrole: String?) -> SkinItem.Kind {
         switch subrole {
@@ -52,20 +54,22 @@ nonisolated enum DockSkin {
         CGRect(x: axPosition.x, y: primaryScreenHeight - axPosition.y - axSize.height, width: axSize.width, height: axSize.height)
     }
 
-    /// The square Apple's Dock draws an item's icon image in.
-    static func iconFrame(for slot: CGRect, orientation: DockOrientation) -> CGRect {
+    /// The square an item's icon image is drawn in: Apple's size, at the item's place along the bar, and centered
+    /// across the bar so icons stay in the middle however tall the bar is.
+    static func iconFrame(for slot: CGRect, in bar: CGRect, orientation: DockOrientation) -> CGRect {
         let along = orientation == .bottom ? slot.width : slot.height
         let side = min(along * CGFloat(iconFraction), slot.width, slot.height)
-        return CGRect(x: slot.midX - side / 2, y: slot.midY - side / 2, width: side, height: side)
+        let center = orientation == .bottom ? CGPoint(x: slot.midX, y: bar.midY) : CGPoint(x: bar.midX, y: slot.midY)
+        return CGRect(x: center.x - side / 2, y: center.y - side / 2, width: side, height: side)
     }
 
-    /// Center of the running indicator: inside the slot, on the side facing the screen edge.
-    static func indicatorCenter(for slot: CGRect, orientation: DockOrientation) -> CGPoint {
-        let inset = CGFloat(indicatorInset)
+    /// Center of the running indicator: just past the visible icon, on the side facing the screen edge.
+    static func indicatorCenter(for icon: CGRect, orientation: DockOrientation) -> CGPoint {
+        let offset = icon.width * CGFloat(iconPadding) - CGFloat(indicatorGap)
         switch orientation {
-        case .bottom: return CGPoint(x: slot.midX, y: slot.minY + inset)
-        case .left: return CGPoint(x: slot.minX + inset, y: slot.midY)
-        case .right: return CGPoint(x: slot.maxX - inset, y: slot.midY)
+        case .bottom: return CGPoint(x: icon.midX, y: icon.minY + offset)
+        case .left: return CGPoint(x: icon.minX + offset, y: icon.midY)
+        case .right: return CGPoint(x: icon.maxX - offset, y: icon.midY)
         }
     }
 

@@ -1,6 +1,5 @@
 import AppKit
 import Observation
-import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let store = SettingsStore()
@@ -9,16 +8,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let skinTracker = DockSkinTracker()
     let dockEditor = DockEditor()
     let windowCorners = WindowCornerOverride()
+    let dockSize = DockSize()
+    let pinner = DockPinner()
 
     private var overlay: OverlayController?
     private var hotKey: GlobalHotKey?
     private var hotKeyTask: Task<Void, Never>?
-    private var dockEditorWindow: NSWindow?
+    private var pinTask: Task<Void, Never>?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let overlay = OverlayController(store: store, dockObserver: dockObserver, skinTracker: skinTracker)
         overlay.start()
         self.overlay = overlay
+
+        pinTask = Task { [store, dockObserver, pinner] in
+            for await (display, orientation) in Observations({ (store.configuration.pinnedDisplay, dockObserver.dock.orientation) }) {
+                pinner.update(pinnedDisplay: display, orientation: orientation)
+            }
+        }
 
         let hotKey = GlobalHotKey(shortcut: .toggleOverlay) { [store] in
             store.configuration.isEnabled.toggle()
@@ -29,21 +36,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 if enabled { hotKey.register() } else { hotKey.unregister() }
             }
         }
-    }
-
-    /// Opens the Dock item editor, re-reading the Dock unless an edit is still pending.
-    func showDockEditor() {
-        if !dockEditor.hasChanges { dockEditor.reload() }
-        if dockEditorWindow == nil {
-            let window = NSWindow(contentViewController: NSHostingController(rootView: DockEditorView(editor: dockEditor)))
-            window.title = "Dock Items"
-            window.setContentSize(NSSize(width: 420, height: 640))
-            window.isReleasedWhenClosed = false
-            window.center()
-            dockEditorWindow = window
-        }
-        NSApp.activate()
-        dockEditorWindow?.makeKeyAndOrderFront(nil)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
