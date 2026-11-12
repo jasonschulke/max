@@ -4,6 +4,7 @@ struct SettingsView: View {
     @Bindable var store: SettingsStore
     let loginItem: LoginItemSettings
     let skin: DockSkinTracker
+    let windowCorners: WindowCornerOverride
     let showDockEditor: () -> Void
 
     private var config: Binding<OverlayConfiguration> { $store.configuration }
@@ -81,6 +82,38 @@ struct SettingsView: View {
                 }
             }
 
+            Section {
+                Toggle("Custom window corners", isOn: Binding(
+                    get: { windowCorners.isOverridden },
+                    set: { windowCorners.setOverridden($0) }
+                ))
+                if let radius = windowCorners.radius {
+                    SettingSlider("Radius", value: Binding(
+                        get: { radius },
+                        set: { windowCorners.set(radius: $0.rounded()) }
+                    ), in: WindowCornerRadius.range, label: cornerRadiusLabel, onEditingChanged: { _ in })
+                }
+                LabeledContent("Apply to open apps") {
+                    HStack {
+                        Button("Relaunch Finder", action: windowCorners.relaunchFinder)
+                        Button("Relaunch Apps…", action: windowCorners.prepareRelaunch)
+                    }
+                }
+            } header: {
+                Text("Window Corners")
+            } footer: {
+                Text("Sets the corner radius of every app's windows; macOS uses 16 pt. Apps pick it up when they reopen. This relies on an undocumented macOS setting that a future update could change.")
+            }
+            .alert("Relaunch \(windowCorners.pendingRelaunch.count) Apps?", isPresented: Binding(
+                get: { !windowCorners.pendingRelaunch.isEmpty },
+                set: { if !$0 { windowCorners.cancelRelaunch() } }
+            )) {
+                Button("Relaunch", action: windowCorners.confirmRelaunch)
+                Button("Cancel", role: .cancel, action: windowCorners.cancelRelaunch)
+            } message: {
+                Text("Max will quit and reopen \(windowCorners.pendingRelaunch.map(\.name).formatted()). Apps with unsaved changes ask you to save first, and quitting Terminal ends anything running in it.")
+            }
+
             Section("Behavior") {
                 Toggle("Animate changes", isOn: config.animationsEnabled)
                 Toggle("Follow the Dock when it auto-hides", isOn: config.mirrorsDockAutoHide)
@@ -116,6 +149,10 @@ struct SettingsView: View {
 
     private func setInteracting(_ interacting: Bool) {
         store.isInteracting = interacting
+    }
+
+    private func cornerRadiusLabel(_ value: Double) -> String {
+        value == 0 ? "Square" : "\(Int(value)) pt"
     }
 
     private func percent(_ value: Double) -> String { "\(Int((value * 100).rounded()))%" }

@@ -12,7 +12,8 @@ struct MaxApp: App {
         Settings {
             SettingsView(
                 store: appDelegate.store, loginItem: appDelegate.loginItem,
-                skin: appDelegate.skinTracker, showDockEditor: appDelegate.showDockEditor
+                skin: appDelegate.skinTracker, windowCorners: appDelegate.windowCorners,
+                showDockEditor: appDelegate.showDockEditor
             )
         }
     }

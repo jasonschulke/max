@@ -51,4 +51,5 @@ run([
     ("OverlayConfiguration", overlayConfigurationTests),
     ("DockGeometry", dockGeometryTests),
     ("DockSkin", dockSkinTests),
+    ("WindowCornerRadius", windowCornerRadiusTests),
 ])

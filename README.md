@@ -21,6 +21,8 @@ Requires macOS 26 or later.
   every click, menu, label, and drag, and Max follows it as it changes. Needs Accessibility access.
 - **Dock item editor** — reorder, add, and remove the Dock's apps, folders, and spacers from Max's
   settings.
+- **Window corners** — set the corner radius of every app's windows, down to square, and relaunch
+  open apps to apply it.
 - **Global shortcut** — ⌃⌥⌘M toggles the bar from any app.
 - **Light and dark** — the material adapts on its own.
 - **Launch at login** via `SMAppService`.
@@ -54,6 +56,7 @@ Max lives in the menu bar (the dock icon). The menu toggles the bar, opens Setti
 | Setting | What it does |
 |---|---|
 | Draw over the Dock | Covers Apple's Dock and draws its items where it draws them. Until Max has Accessibility access, the bar stays behind the Dock. |
+| Custom window corners | Sets the corner radius every app's windows use (macOS: 16 pt), down to *Square*. *Relaunch Finder* and *Relaunch Apps…* apply it to apps already open; Relaunch Apps lists the apps and asks first. |
 | Dock items › Edit… | Reorder (drag), add (apps, folders, spacers), and remove the Dock's items. Apply restarts the Dock; the first Apply keeps a backup you can restore. |
 | Style | Liquid Glass, Clear Glass, or Blur (with a material picker) |
 | Opacity | Whole-bar alpha |
@@ -94,6 +97,10 @@ Settings from Max 1.0 migrate automatically on first launch.
   Dock's own drag feedback shows.
 - **Dock item editor** — edits `persistent-apps` and `persistent-others` in `com.apple.dock`, keeping
   the Dock's own entries intact, then restarts the Dock (`killall Dock`), as `dockutil` does.
+- **Window corners** — AppKit reads the undocumented global default `NSConvolutionOverride1` as the
+  window corner radius when an app launches (verified on macOS 27). Zero and negative values are
+  ignored, so *Square* stores 0.01. Equivalent to `defaults write -g NSConvolutionOverride1 -float 0.01`;
+  turning the setting off deletes the key.
 - **Material** — `NSGlassEffectView` for the glass styles, `NSVisualEffectView` for blur. Tints go
   through the glass view's `tintColor`, or a gradient layer when fading.
 - **State** — one `@Observable` store. The overlay controller consumes an `Observations` stream of
@@ -108,6 +115,8 @@ Settings from Max 1.0 migrate automatically on first launch.
 - Drawing over the Dock, Max shows each app's standard icon: live Dock tiles (Calendar's date,
   minimized-window thumbnails, launch bounces, magnification) stay under the bar. The Trash always
   looks empty.
+- Window corners rely on an undocumented macOS default; an update could change or drop it. Apps that
+  draw their own window frames are not affected.
 - The global shortcut is fixed at ⌃⌥⌘M.
 
 ## Project layout
@@ -115,8 +124,8 @@ Settings from Max 1.0 migrate automatically on first launch.
 ```
 Max/
 ├── App/        MaxApp (SwiftUI MenuBarExtra + Settings scene), AppDelegate
-├── Models/     OverlayConfiguration, DockGeometry, DockSkin, RGBAColor — pure, tested
-├── Services/   SettingsStore, DockObserver, DockSkinTracker, DockEditor, DockRevealTracker, GlobalHotKey, LaunchAtLogin
+├── Models/     OverlayConfiguration, DockGeometry, DockSkin, WindowCornerRadius, RGBAColor — pure, tested
+├── Services/   SettingsStore, DockObserver, DockSkinTracker, DockEditor, WindowCornerOverride, DockRevealTracker, GlobalHotKey, LaunchAtLogin
 ├── Overlay/    OverlayWindow, OverlayBackdropView, OverlayController, DockSkinView
 ├── Settings/   SettingsView, DockEditorView
 └── Resources/  Info.plist, Assets.xcassets

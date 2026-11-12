@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let loginItem = LoginItemSettings()
     let skinTracker = DockSkinTracker()
     let dockEditor = DockEditor()
+    let windowCorners = WindowCornerOverride()
 
     private var overlay: OverlayController?
     private var hotKey: GlobalHotKey?

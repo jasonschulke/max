@@ -5,6 +5,13 @@
 	};
 	objectVersion = 56;
 	objects = {
+		249A5738E6752131C1FFBDEA = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCornerRadius.swift; sourceTree = "<group>"; };
+		AE0A236A4AD65CFD10781CA6 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCornerOverride.swift; sourceTree = "<group>"; };
+		B7123045C069279537736F07 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCornerRadiusTests.swift; sourceTree = "<group>"; };
+		3B5037416B6BE1D98324684A = {isa = PBXBuildFile; fileRef = 249A5738E6752131C1FFBDEA /* WindowCornerRadius.swift */; };
+		7D6DC7EDFFCB1319241F272A = {isa = PBXBuildFile; fileRef = AE0A236A4AD65CFD10781CA6 /* WindowCornerOverride.swift */; };
+		3ADBC824DDBFEA5E17601760 = {isa = PBXBuildFile; fileRef = 249A5738E6752131C1FFBDEA /* WindowCornerRadius.swift */; };
+		735CE33A604A500CA39F7EC2 = {isa = PBXBuildFile; fileRef = B7123045C069279537736F07 /* WindowCornerRadiusTests.swift */; };
 		4FD13888F1DC16B1950A3B3E = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockSkin.swift; sourceTree = "<group>"; };
 		0C404D75F48158B87DA65740 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockSkinTracker.swift; sourceTree = "<group>"; };
 		A48EA0B296036889F033DA6F = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockEditor.swift; sourceTree = "<group>"; };
@@ -38,6 +45,7 @@
 		19DA57D06A87E0CE3741C2B2 = {
 			isa = PBXGroup;
 			children = (
+				249A5738E6752131C1FFBDEA /* WindowCornerRadius.swift */,
 				4FD13888F1DC16B1950A3B3E /* DockSkin.swift */,
 				917E384495E45694D7B4C5B3 /* DockGeometry.swift */,
 				717DB392316F930F01005D14 /* OverlayConfiguration.swift */,
@@ -133,6 +141,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3B5037416B6BE1D98324684A,
+				7D6DC7EDFFCB1319241F272A,
 				2CEE9174096BD15604A07601,
 				4EBCB1879BBFB3A9B8EF8E0A,
 				FB0D47372C9B0A9EC639EEF6,
@@ -244,6 +254,7 @@
 		74C0354F987B4FC0FDE2C044 = {
 			isa = PBXGroup;
 			children = (
+				B7123045C069279537736F07 /* WindowCornerRadiusTests.swift */,
 				E8946B2CEA9244C255465331 /* DockSkinTests.swift */,
 				5FDE3F5FE34D1B7E23EF2C7F /* DockGeometryTests.swift */,
 				49BB5F08F26542A884840782 /* OverlayConfigurationTests.swift */,
@@ -332,6 +343,7 @@
 		BBAF9522EB04AF1ACFD6E1E5 = {
 			isa = PBXGroup;
 			children = (
+				AE0A236A4AD65CFD10781CA6 /* WindowCornerOverride.swift */,
 				A48EA0B296036889F033DA6F /* DockEditor.swift */,
 				0C404D75F48158B87DA65740 /* DockSkinTracker.swift */,
 				533F6A1B56F99975E42CE64F /* DockObserver.swift */,
@@ -347,6 +359,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3ADBC824DDBFEA5E17601760,
+				735CE33A604A500CA39F7EC2,
 				2808A81F26F8AA7E91B6BF8D,
 				FCEAE2E12639E9F2C270F9A5,
 				B33E552504739033CB018F61,
