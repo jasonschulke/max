@@ -43,8 +43,9 @@ make install  # copies Max.app to /Applications
 `Max.app` is built in the repository root and is ignored by git.
 
 macOS ties Accessibility access to the app's signature, and an ad-hoc signature changes with every
-build, so after rebuilding, turn Max off and on again under System Settings › Privacy & Security ›
-Accessibility (or sign with a stable identity: `make SIGN_IDENTITY="Apple Development: …"`).
+build. When *Draw over the Dock* is on and access is missing, Max clears its own stale entry and asks
+again at launch; grant it in the prompt. Signing with a stable identity avoids this:
+`make SIGN_IDENTITY="Apple Development: …"`.
 
 ## Usage
 

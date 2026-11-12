@@ -22,6 +22,7 @@ final class DockSkinTracker {
     @ObservationIgnored private var dockList: (pid: pid_t, element: AXUIElement)?
     @ObservationIgnored private var dragStart: (inDock: Bool, pasteboardCount: Int, location: CGPoint)?
     @ObservationIgnored private var bundleIDs: [URL: String] = [:]
+    @ObservationIgnored private var hasAskedForAccess = false
 
     /// Badges and running state change without notice, so the Dock is also re-read on this interval.
     private let pollInterval = 2.0
@@ -48,6 +49,10 @@ final class DockSkinTracker {
         pollTimer = Timer.scheduledTimer(withTimeInterval: pollInterval, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.refresh() }
         }
+        if !hasAskedForAccess, !AXIsProcessTrusted() {
+            hasAskedForAccess = true
+            requestAccess()
+        }
         refresh()
     }
 
@@ -67,12 +72,22 @@ final class DockSkinTracker {
         if isDragging { isDragging = false }
     }
 
-    /// Shows the system prompt for Accessibility access (once per app) and opens the pane in System Settings.
+    /// Shows the system prompt for Accessibility access. Asked once per launch while skinning lacks it, and from Settings.
     func requestAccess() {
-        isTrusted = AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
-        if !isTrusted, let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-            NSWorkspace.shared.open(url)
+        guard !AXIsProcessTrusted() else {
+            isTrusted = true
+            return
         }
+        // An entry left by an earlier build, whose signature no longer matches, keeps macOS from prompting
+        // while granting nothing. Max clears its own entry first; it has no access to lose.
+        if let bundleID = Bundle.main.bundleIdentifier {
+            let tccutil = Process()
+            tccutil.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+            tccutil.arguments = ["reset", "Accessibility", bundleID]
+            try? tccutil.run()
+            tccutil.waitUntilExit()
+        }
+        isTrusted = AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
     }
 
     // MARK: Reading the Dock

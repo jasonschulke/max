@@ -28,7 +28,7 @@ struct SettingsView: View {
             } header: {
                 Text("Dock")
             } footer: {
-                Text("Max covers Apple's Dock, drawing its icons where the Dock draws them, so no floating pill shows. The Dock still handles clicks, menus, labels, and drags, and Max follows it as it changes. Reading the Dock needs Accessibility access.")
+                Text("Max covers Apple's Dock, drawing its icons where the Dock draws them, so no floating pill shows. The Dock still handles clicks, menus, labels, and drags, and Max follows it as it changes. Max uses Accessibility access only to read where the Dock draws its items, and asks for it when this is on.")
             }
 
             Section("Appearance") {
