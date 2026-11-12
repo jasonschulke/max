@@ -79,16 +79,15 @@ final class OverlayController {
             screenFrame: snapshot.screenFrame, visibleFrame: snapshot.visibleFrame
         )
         setFrame(frame, animated: animated)
-        backdrop.apply(config, orientation: snapshot.dock.orientation)
 
+        // Drawing its own Dock, the bar sits over Apple's and must be opaque to hide it.
         let drawsDock = config.replacesDock
+        backdrop.apply(config, orientation: snapshot.dock.orientation, opaque: drawsDock)
         window.setDrawsDock(drawsDock)
         dockBar.isHidden = !drawsDock
         if drawsDock {
             dockBar.update(tiles: snapshot.tiles, orientation: snapshot.dock.orientation, preferredIconSize: snapshot.dock.tileSize)
         }
-        // Drawing its own Dock, only the material takes the opacity setting; the icons stay solid.
-        backdrop.alphaValue = drawsDock ? CGFloat(config.opacity) : 1
 
         let followsDock = config.isEnabled && snapshot.dock.autoHides && config.mirrorsDockAutoHide
         if followsDock {

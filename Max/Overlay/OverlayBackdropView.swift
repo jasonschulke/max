@@ -1,7 +1,8 @@
 import AppKit
 
-/// Draws the bar: Liquid Glass or a blur material, plus an optional tint.
+/// Draws the bar: Liquid Glass or a blur material, plus an optional tint, over an opaque base when asked.
 final class OverlayBackdropView: NSView {
+    private let baseView = BaseView()
     private let glassView = NSGlassEffectView()
     private let blurView = NSVisualEffectView()
     private let tintView = TintView()
@@ -10,7 +11,7 @@ final class OverlayBackdropView: NSView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         wantsLayer = true
-        for view in [glassView, blurView] as [NSView] {
+        for view in [baseView, glassView, blurView] as [NSView] {
             view.frame = bounds
             view.autoresizingMask = [.width, .height]
             addSubview(view)
@@ -23,10 +24,18 @@ final class OverlayBackdropView: NSView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("not supported") }
 
-    func apply(_ configuration: OverlayConfiguration, orientation: DockOrientation) {
+    /// `opaque` lays the material over a solid base, so nothing behind the bar (Apple's Dock) shows through.
+    /// The opacity setting then fades only the material.
+    func apply(_ configuration: OverlayConfiguration, orientation: DockOrientation, opaque: Bool) {
         let radius = CGFloat(configuration.cornerRadius)
         let tint = configuration.tint
         tintView.apply(tint, orientation: orientation)
+        baseView.isHidden = !opaque
+        baseView.cornerRadius = radius
+        baseView.orientation = orientation
+        let materialAlpha = opaque ? CGFloat(configuration.opacity) : 1
+        glassView.alphaValue = materialAlpha
+        blurView.alphaValue = materialAlpha
         // The material overhangs the screen edge and the window clips it; autoresizing keeps the overhang as the bar resizes.
         let materialFrame = DockGeometry.materialFrame(in: bounds, cornerRadius: configuration.cornerRadius, orientation: orientation)
         glassView.frame = materialFrame
@@ -83,6 +92,22 @@ final class OverlayBackdropView: NSView {
         image.capInsets = NSEdgeInsets(top: radius, left: radius, bottom: radius, right: radius)
         image.resizingMode = .stretch
         return image
+    }
+}
+
+/// The solid ground under the material, shaped like it: rounded only on the corners facing into the screen.
+private final class BaseView: NSView {
+    var cornerRadius: CGFloat = 0 {
+        didSet { if cornerRadius != oldValue { needsDisplay = true } }
+    }
+    var orientation: DockOrientation = .bottom {
+        didSet { if orientation != oldValue { needsDisplay = true } }
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let shape = DockGeometry.materialFrame(in: bounds, cornerRadius: Double(cornerRadius), orientation: orientation)
+        NSColor.windowBackgroundColor.setFill()
+        NSBezierPath(roundedRect: shape, xRadius: cornerRadius, yRadius: cornerRadius).fill()
     }
 }
 
