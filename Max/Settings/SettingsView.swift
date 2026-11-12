@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var store: SettingsStore
     let loginItem: LoginItemSettings
+    let dockItems: DockItemsStore
 
     private var config: Binding<OverlayConfiguration> { $store.configuration }
 
@@ -11,6 +12,16 @@ struct SettingsView: View {
             Section {
                 Toggle("Show Dock bar", isOn: config.isEnabled)
                 Toggle("Launch at login", isOn: Binding(get: { loginItem.isEnabled }, set: { loginItem.setEnabled($0) }))
+            }
+
+            Section {
+                Toggle("Draw the Dock's icons on the bar", isOn: config.replacesDock)
+                Button("Import Apps from the Dock Again") { dockItems.importFromDock() }
+                    .disabled(!store.configuration.replacesDock)
+            } header: {
+                Text("Dock")
+            } footer: {
+                Text("Max covers Apple's Dock with its own icons. Keep the Dock visible, with auto-hide off, so windows still leave room for it.")
             }
 
             Section("Appearance") {

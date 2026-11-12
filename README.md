@@ -16,6 +16,8 @@ Requires macOS 26 or later.
   own reveal delay. No Accessibility permission needed.
 - **Tint** — flat or fading color wash over the material.
 - **Rounded corners** — only the corners facing into the screen are rounded.
+- **Its own Dock (optional)** — Max can draw the Dock's icons itself, above Apple's Dock, so no
+  floating pill shows on the bar. Kept apps, spacers, and folders are imported from the Dock once.
 - **Global shortcut** — ⌃⌥⌘M toggles the bar from any app.
 - **Light and dark** — the material adapts on its own.
 - **Launch at login** via `SMAppService`.
@@ -43,6 +45,8 @@ Max lives in the menu bar (the dock icon). The menu toggles the bar, opens Setti
 
 | Setting | What it does |
 |---|---|
+| Draw the Dock's icons on the bar | Max covers Apple's Dock with its own icons: click to open or switch, right-click for Hide, Keep in Dock, Show in Finder, and Quit (⌥ for Force Quit), drag to reorder, drop files on an app or the Trash, drop apps to keep them |
+| Import Apps from the Dock Again | Replaces Max's kept items with Apple's Dock's current ones |
 | Style | Liquid Glass, Clear Glass, or Blur (with a material picker) |
 | Opacity | Whole-bar alpha |
 | Corner radius | Rounds the inward-facing corners |
@@ -72,6 +76,11 @@ Settings from Max 1.0 migrate automatically on first launch.
   (`kCGDockWindowLevel - 1`), on every Space, stationary in Mission Control. The window stays inside
   the screen; the material inside it runs `cornerRadius` points past the screen edge and is clipped
   there, so only the inward corners show their radius and nothing spills onto a neighboring display.
+- **Own Dock** — Apple's Dock stays on (so macOS keeps reserving its strip and windows stop above it);
+  Max's window moves one level above it (`kCGDockWindowLevel + 1`) and takes clicks as a
+  non-activating panel, so the frontmost app keeps focus. Kept items live under `dockItems` in Max's
+  preferences; running apps come from `NSWorkspace`. Clicks go through
+  `NSWorkspace.openApplication`, which launches, activates, or reopens a window like the Dock.
 - **Material** — `NSGlassEffectView` for the glass styles, `NSVisualEffectView` for blur. Tints go
   through the glass view's `tintColor`, or a gradient layer when fading.
 - **State** — one `@Observable` store. The overlay controller consumes an `Observations` stream of
@@ -83,6 +92,8 @@ Settings from Max 1.0 migrate automatically on first launch.
 - While the Dock auto-hides, the bar cannot tell when the Dock moves to another display; it stays on
   the display the Dock last reserved space on.
 - The auto-hide thickness is an estimate; use *Custom* height if it does not line up.
+- Max's own Dock does not show notification badges, folder stacks, minimized windows, or apps' own
+  Dock menus yet. Apple's Dock is still underneath and appears as usual wherever Max's bar is not.
 - The global shortcut is fixed at ⌃⌥⌘M.
 
 ## Project layout
@@ -90,9 +101,9 @@ Settings from Max 1.0 migrate automatically on first launch.
 ```
 Max/
 ├── App/        MaxApp (SwiftUI MenuBarExtra + Settings scene), AppDelegate
-├── Models/     OverlayConfiguration, DockGeometry, RGBAColor — pure, tested
-├── Services/   SettingsStore, DockObserver, DockRevealTracker, GlobalHotKey, LaunchAtLogin
-├── Overlay/    OverlayWindow, OverlayBackdropView, OverlayController
+├── Models/     OverlayConfiguration, DockGeometry, DockItems, RGBAColor — pure, tested
+├── Services/   SettingsStore, DockObserver, DockItemsStore, DockRevealTracker, GlobalHotKey, LaunchAtLogin
+├── Overlay/    OverlayWindow, OverlayBackdropView, OverlayController, DockBarView
 ├── Settings/   SettingsView
 └── Resources/  Info.plist, Assets.xcassets
 Tests/          Model tests with a small runner (no XCTest dependency)

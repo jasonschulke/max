@@ -4,6 +4,7 @@ let overlayConfigurationTests: [TestCase] = [
     TestCase(name: "defaults match the Dock and use Liquid Glass") {
         let config = OverlayConfiguration()
         expectEqual(config.isEnabled, true)
+        expectEqual(config.replacesDock, false)
         expectEqual(config.style, .glass)
         expectEqual(config.heightMode, .matchDock)
         expectEqual(config.opacity, 1.0)
@@ -28,6 +29,7 @@ let overlayConfigurationTests: [TestCase] = [
     TestCase(name: "JSON round trip preserves every field") {
         var config = OverlayConfiguration()
         config.isEnabled = false
+        config.replacesDock = true
         config.style = .blur
         config.blurMaterial = .hudWindow
         config.opacity = 0.42

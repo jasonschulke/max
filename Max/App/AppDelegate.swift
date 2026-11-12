@@ -5,13 +5,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let store = SettingsStore()
     let dockObserver = DockObserver()
     let loginItem = LoginItemSettings()
+    let dockItems = DockItemsStore()
 
     private var overlay: OverlayController?
     private var hotKey: GlobalHotKey?
     private var hotKeyTask: Task<Void, Never>?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let overlay = OverlayController(store: store, dockObserver: dockObserver)
+        let overlay = OverlayController(store: store, dockObserver: dockObserver, dockItems: dockItems)
         overlay.start()
         self.overlay = overlay
 

@@ -1,23 +1,34 @@
 import AppKit
 import Observation
 
-/// Owns the overlay window and keeps it in sync with the settings, the Dock, and the displays.
+/// Owns the overlay window and keeps it in sync with the settings, the Dock, the running apps, and the displays.
 final class OverlayController {
     private let store: SettingsStore
     private let dockObserver: DockObserver
+    private let dockItems: DockItemsStore
     private let revealTracker = DockRevealTracker()
     private let window = OverlayWindow()
-    private let backdrop = OverlayBackdropView(frame: .zero)
+    private let backdrop: OverlayBackdropView
+    private let dockBar: DockBarView
     private var observationTask: Task<Void, Never>?
     private var visibilityGeneration = 0
     private var hasApplied = false
 
     private let changeDuration = 0.25
 
-    init(store: SettingsStore, dockObserver: DockObserver) {
+    init(store: SettingsStore, dockObserver: DockObserver, dockItems: DockItemsStore) {
         self.store = store
         self.dockObserver = dockObserver
-        window.contentView = backdrop
+        self.dockItems = dockItems
+        let content = NSView(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
+        backdrop = OverlayBackdropView(frame: content.bounds)
+        dockBar = DockBarView(items: dockItems)
+        dockBar.frame = content.bounds
+        for view in [backdrop, dockBar] as [NSView] {
+            view.autoresizingMask = [.width, .height]
+            content.addSubview(view)
+        }
+        window.contentView = content
     }
 
     private struct Snapshot: Equatable {
@@ -27,20 +38,24 @@ final class OverlayController {
         var screenFrame: CGRect
         var visibleFrame: CGRect
         var isRevealed: Bool
+        var tiles: [DockTile]
     }
 
     func start() {
         observationTask?.cancel()
-        observationTask = Task { [store, dockObserver, revealTracker] in
+        observationTask = Task { [store, dockObserver, dockItems, revealTracker] in
             // Emits the current snapshot first, then one per change (coalesced per run-loop turn).
             let snapshots = Observations {
-                Snapshot(
-                    configuration: store.configuration,
+                let configuration = store.configuration
+                return Snapshot(
+                    configuration: configuration,
                     isInteracting: store.isInteracting,
                     dock: dockObserver.dock,
                     screenFrame: dockObserver.screenFrame,
                     visibleFrame: dockObserver.visibleFrame,
-                    isRevealed: revealTracker.isRevealed
+                    isRevealed: revealTracker.isRevealed,
+                    // The running apps only matter while Max draws its own Dock.
+                    tiles: configuration.replacesDock ? dockItems.tiles : []
                 )
             }
             for await snapshot in snapshots {
@@ -66,6 +81,15 @@ final class OverlayController {
         setFrame(frame, animated: animated)
         backdrop.apply(config, orientation: snapshot.dock.orientation)
 
+        let drawsDock = config.replacesDock
+        window.setDrawsDock(drawsDock)
+        dockBar.isHidden = !drawsDock
+        if drawsDock {
+            dockBar.update(tiles: snapshot.tiles, orientation: snapshot.dock.orientation, preferredIconSize: snapshot.dock.tileSize)
+        }
+        // Drawing its own Dock, only the material takes the opacity setting; the icons stay solid.
+        backdrop.alphaValue = drawsDock ? CGFloat(config.opacity) : 1
+
         let followsDock = config.isEnabled && snapshot.dock.autoHides && config.mirrorsDockAutoHide
         if followsDock {
             let zone = DockGeometry.revealZone(orientation: snapshot.dock.orientation, screenFrame: snapshot.screenFrame, thickness: thickness)
@@ -83,7 +107,7 @@ final class OverlayController {
             visible = true
         }
         let duration = snapshot.dock.autoHides ? snapshot.dock.autoHideDuration : changeDuration
-        setVisible(visible, opacity: config.opacity, animated: animated, duration: duration)
+        setVisible(visible, opacity: drawsDock ? 1 : config.opacity, animated: animated, duration: duration)
     }
 
     private func setFrame(_ frame: CGRect, animated: Bool) {
