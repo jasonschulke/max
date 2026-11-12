@@ -10,7 +10,10 @@ struct MaxApp: App {
         }
 
         Settings {
-            SettingsView(store: appDelegate.store, loginItem: appDelegate.loginItem, dockItems: appDelegate.dockItems)
+            SettingsView(
+                store: appDelegate.store, loginItem: appDelegate.loginItem,
+                skin: appDelegate.skinTracker, showDockEditor: appDelegate.showDockEditor
+            )
         }
     }
 }

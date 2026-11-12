@@ -99,8 +99,9 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     }
 
     var isEnabled = true
-    /// Draw Max's own Dock icons on the bar, above Apple's Dock, instead of sitting behind it.
-    var replacesDock = false
+    /// Sit over Apple's Dock and draw its icons where it draws them (needs Accessibility access),
+    /// instead of sitting behind it.
+    var skinsDock = false
     var style: Style = .glass
     var blurMaterial: BlurMaterial = .underWindowBackground
     /// Alpha of the bar's material (and, behind Apple's Dock, of the whole bar).
@@ -130,7 +131,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     // MARK: Codable (missing or unknown values fall back to defaults)
 
     private enum CodingKeys: String, CodingKey {
-        case isEnabled, replacesDock, style, blurMaterial, opacity, heightMode, heightAdjustment, customHeight
+        case isEnabled, skinsDock, style, blurMaterial, opacity, heightMode, heightAdjustment, customHeight
         case cornerRadius, tint, animationsEnabled, mirrorsDockAutoHide, globalShortcutEnabled
     }
 
@@ -138,7 +139,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let defaults = OverlayConfiguration()
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? defaults.isEnabled
-        replacesDock = try container.decodeIfPresent(Bool.self, forKey: .replacesDock) ?? defaults.replacesDock
+        skinsDock = try container.decodeIfPresent(Bool.self, forKey: .skinsDock) ?? defaults.skinsDock
         style = container.decodeEnum(Style.self, forKey: .style) ?? defaults.style
         blurMaterial = container.decodeEnum(BlurMaterial.self, forKey: .blurMaterial) ?? defaults.blurMaterial
         opacity = try container.decodeIfPresent(Double.self, forKey: .opacity) ?? defaults.opacity

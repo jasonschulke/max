@@ -3,7 +3,8 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var store: SettingsStore
     let loginItem: LoginItemSettings
-    let dockItems: DockItemsStore
+    let skin: DockSkinTracker
+    let showDockEditor: () -> Void
 
     private var config: Binding<OverlayConfiguration> { $store.configuration }
 
@@ -15,13 +16,19 @@ struct SettingsView: View {
             }
 
             Section {
-                Toggle("Draw the Dock's icons on the bar", isOn: config.replacesDock)
-                Button("Import Apps from the Dock Again") { dockItems.importFromDock() }
-                    .disabled(!store.configuration.replacesDock)
+                Toggle("Draw over the Dock", isOn: config.skinsDock)
+                if store.configuration.skinsDock, !skin.isTrusted {
+                    LabeledContent("Needs Accessibility access") {
+                        Button("Grant Access…") { skin.requestAccess() }
+                    }
+                }
+                LabeledContent("Dock items") {
+                    Button("Edit…", action: showDockEditor)
+                }
             } header: {
                 Text("Dock")
             } footer: {
-                Text("Max covers Apple's Dock with its own icons. Keep the Dock visible, with auto-hide off, so windows still leave room for it.")
+                Text("Max covers Apple's Dock, drawing its icons where the Dock draws them, so no floating pill shows. The Dock still handles clicks, menus, labels, and drags, and Max follows it as it changes. Reading the Dock needs Accessibility access.")
             }
 
             Section("Appearance") {
@@ -69,8 +76,8 @@ struct SettingsView: View {
             } header: {
                 Text("Tint")
             } footer: {
-                if store.configuration.replacesDock {
-                    Text("While Max draws the Dock's icons, the tint colors the bar's solid base.")
+                if store.configuration.skinsDock {
+                    Text("While Max draws over the Dock, the tint colors the bar's solid base.")
                 }
             }
 

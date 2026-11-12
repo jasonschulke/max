@@ -16,8 +16,11 @@ Requires macOS 26 or later.
   own reveal delay. No Accessibility permission needed.
 - **Tint** — flat or fading color wash over the material.
 - **Rounded corners** — only the corners facing into the screen are rounded.
-- **Its own Dock (optional)** — Max can draw the Dock's icons itself, above Apple's Dock, so no
-  floating pill shows on the bar. Kept apps, spacers, and folders are imported from the Dock once.
+- **Draw over the Dock (optional)** — Max covers Apple's Dock and draws its icons, running indicators,
+  and badges exactly where the Dock draws them, so no floating pill shows. The Dock still handles
+  every click, menu, label, and drag, and Max follows it as it changes. Needs Accessibility access.
+- **Dock item editor** — reorder, add, and remove the Dock's apps, folders, and spacers from Max's
+  settings.
 - **Global shortcut** — ⌃⌥⌘M toggles the bar from any app.
 - **Light and dark** — the material adapts on its own.
 - **Launch at login** via `SMAppService`.
@@ -31,7 +34,7 @@ Open `Max.xcodeproj` and run the `Max` scheme. The `MaxTests` scheme runs the mo
 ### Without Xcode (Command Line Tools only)
 
 ```bash
-make          # builds Max.app (universal, ad-hoc signed)
+make          # builds Max.app (universal, ad-hoc signed; SIGN_IDENTITY=… to sign with a certificate)
 make test     # runs the model tests
 make run      # builds and launches
 make install  # copies Max.app to /Applications
@@ -39,14 +42,18 @@ make install  # copies Max.app to /Applications
 
 `Max.app` is built in the repository root and is ignored by git.
 
+macOS ties Accessibility access to the app's signature, and an ad-hoc signature changes with every
+build, so after rebuilding, turn Max off and on again under System Settings › Privacy & Security ›
+Accessibility (or sign with a stable identity: `make SIGN_IDENTITY="Apple Development: …"`).
+
 ## Usage
 
 Max lives in the menu bar (the dock icon). The menu toggles the bar, opens Settings, and quits.
 
 | Setting | What it does |
 |---|---|
-| Draw the Dock's icons on the bar | Max covers Apple's Dock with its own icons: click to open or switch, right-click for Hide, Keep in Dock, Show in Finder, and Quit (⌥ for Force Quit), drag to reorder, drop files on an app or the Trash, drop apps to keep them |
-| Import Apps from the Dock Again | Replaces Max's kept items with Apple's Dock's current ones |
+| Draw over the Dock | Covers Apple's Dock and draws its items where it draws them. Until Max has Accessibility access, the bar stays behind the Dock. |
+| Dock items › Edit… | Reorder (drag), add (apps, folders, spacers), and remove the Dock's items. Apply restarts the Dock; the first Apply keeps a backup you can restore. |
 | Style | Liquid Glass, Clear Glass, or Blur (with a material picker) |
 | Opacity | Whole-bar alpha |
 | Corner radius | Rounds the inward-facing corners |
@@ -76,11 +83,16 @@ Settings from Max 1.0 migrate automatically on first launch.
   (`kCGDockWindowLevel - 1`), on every Space, stationary in Mission Control. The window stays inside
   the screen; the material inside it runs `cornerRadius` points past the screen edge and is clipped
   there, so only the inward corners show their radius and nothing spills onto a neighboring display.
-- **Own Dock** — Apple's Dock stays on (so macOS keeps reserving its strip and windows stop above it);
-  Max's window moves one level above it (`kCGDockWindowLevel + 1`) and takes clicks as a
-  non-activating panel, so the frontmost app keeps focus. Kept items live under `dockItems` in Max's
-  preferences; running apps come from `NSWorkspace`. Clicks go through
-  `NSWorkspace.openApplication`, which launches, activates, or reopens a window like the Dock.
+- **Drawing over the Dock** — Apple's Dock stays on, so macOS keeps reserving its strip and windows
+  stop above it. Max's window moves one level above it (`kCGDockWindowLevel + 1`) but stays
+  click-through, so the Dock still gets every click, hover, and drag. Max reads the Dock's items
+  (position, size, URL, running state, badge) from its Accessibility tree and draws each icon where
+  the Dock does, over an opaque base so the Dock never shows through. It re-reads the Dock when apps
+  launch or quit, Dock preferences change, or displays change, a few times as the layout animates,
+  and every 2 seconds for badges. While something is dragged in the Dock, the bar fades out so the
+  Dock's own drag feedback shows.
+- **Dock item editor** — edits `persistent-apps` and `persistent-others` in `com.apple.dock`, keeping
+  the Dock's own entries intact, then restarts the Dock (`killall Dock`), as `dockutil` does.
 - **Material** — `NSGlassEffectView` for the glass styles, `NSVisualEffectView` for blur. Tints go
   through the glass view's `tintColor`, or a gradient layer when fading.
 - **State** — one `@Observable` store. The overlay controller consumes an `Observations` stream of
@@ -92,8 +104,9 @@ Settings from Max 1.0 migrate automatically on first launch.
 - While the Dock auto-hides, the bar cannot tell when the Dock moves to another display; it stays on
   the display the Dock last reserved space on.
 - The auto-hide thickness is an estimate; use *Custom* height if it does not line up.
-- Max's own Dock does not show notification badges, folder stacks, minimized windows, or apps' own
-  Dock menus yet. Apple's Dock is still underneath and appears as usual wherever Max's bar is not.
+- Drawing over the Dock, Max shows each app's standard icon: live Dock tiles (Calendar's date,
+  minimized-window thumbnails, launch bounces, magnification) stay under the bar. The Trash always
+  looks empty.
 - The global shortcut is fixed at ⌃⌥⌘M.
 
 ## Project layout
@@ -101,10 +114,10 @@ Settings from Max 1.0 migrate automatically on first launch.
 ```
 Max/
 ├── App/        MaxApp (SwiftUI MenuBarExtra + Settings scene), AppDelegate
-├── Models/     OverlayConfiguration, DockGeometry, DockItems, RGBAColor — pure, tested
-├── Services/   SettingsStore, DockObserver, DockItemsStore, DockRevealTracker, GlobalHotKey, LaunchAtLogin
-├── Overlay/    OverlayWindow, OverlayBackdropView, OverlayController, DockBarView
-├── Settings/   SettingsView
+├── Models/     OverlayConfiguration, DockGeometry, DockSkin, RGBAColor — pure, tested
+├── Services/   SettingsStore, DockObserver, DockSkinTracker, DockEditor, DockRevealTracker, GlobalHotKey, LaunchAtLogin
+├── Overlay/    OverlayWindow, OverlayBackdropView, OverlayController, DockSkinView
+├── Settings/   SettingsView, DockEditorView
 └── Resources/  Info.plist, Assets.xcassets
 Tests/          Model tests with a small runner (no XCTest dependency)
 Makefile        Command Line Tools build

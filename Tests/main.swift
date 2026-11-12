@@ -50,5 +50,5 @@ func run(_ suites: [(String, [TestCase])]) -> Never {
 run([
     ("OverlayConfiguration", overlayConfigurationTests),
     ("DockGeometry", dockGeometryTests),
-    ("DockItems", dockItemsTests),
+    ("DockSkin", dockSkinTests),
 ])

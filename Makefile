@@ -10,6 +10,8 @@ VERSION       := 2.0.0
 BUILD_NUMBER  := 2
 MIN_MACOS     := 26.0
 ARCHS         := arm64 x86_64
+# Ad-hoc by default. Accessibility access is tied to the signature, so a stable identity keeps it across builds.
+SIGN_IDENTITY ?= -
 
 APP           := $(APP_NAME).app
 BUILD_DIR     := build
@@ -43,7 +45,7 @@ $(APP)/Contents/MacOS/$(APP_NAME): $(BINARIES) $(INFO_PLIST) Makefile
 	    -e 's/$$(MACOSX_DEPLOYMENT_TARGET)/$(MIN_MACOS)/g' \
 	    $(INFO_PLIST) > $(APP)/Contents/Info.plist
 	printf 'APPL????' > $(APP)/Contents/PkgInfo
-	codesign --force --sign - $(APP)
+	codesign --force --sign "$(SIGN_IDENTITY)" $(APP)
 	@echo "Built $(APP)"
 
 test: $(BUILD_DIR)/$(APP_NAME)Tests
