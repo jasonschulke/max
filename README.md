@@ -1,7 +1,7 @@
 # Max
 
 A menu bar utility that stretches the macOS Dock into a full-width bar. Max draws a Liquid Glass
-(or blur) strip across the Dock's edge of the primary display, sized to the Dock itself, so the Dock
+(or blur) strip across the Dock's edge of the display it is on, sized to the Dock itself, so the Dock
 reads as one continuous bar instead of a floating pill.
 
 Requires macOS 26 or later.
@@ -59,7 +59,9 @@ Settings from Max 1.0 migrate automatically on first launch.
 ## How it works
 
 - **Geometry** — the Dock's strip is the gap between `NSScreen.frame` and `NSScreen.visibleFrame`
-  on the Dock's edge of the primary display (the screen whose origin is `0,0`). Orientation,
+  on the Dock's edge. The display whose strip is reserved is the Dock's display, so the bar follows
+  the Dock between displays; while it auto-hides, the bar stays on the last display that reserved
+  one (the primary display at first). Orientation,
   auto-hide, and tile size come from the `com.apple.dock` preferences domain; Max refreshes on
   `com.apple.dock.prefchanged` and on screen-parameter changes.
 - **Auto-hide** — while the Dock auto-hides, macOS reserves no strip, so the bar's thickness is
@@ -67,8 +69,9 @@ Settings from Max 1.0 migrate automatically on first launch.
   mouse-moved monitor reveals the bar when the pointer touches the Dock's edge and dismisses it
   when the pointer leaves.
 - **Window** — a borderless, click-through `NSWindow` one level below the Dock
-  (`kCGDockWindowLevel - 1`), on every Space, stationary in Mission Control. It hangs
-  `cornerRadius` points off the screen edge so only the inward corners show their radius.
+  (`kCGDockWindowLevel - 1`), on every Space, stationary in Mission Control. The window stays inside
+  the screen; the material inside it runs `cornerRadius` points past the screen edge and is clipped
+  there, so only the inward corners show their radius and nothing spills onto a neighboring display.
 - **Material** — `NSGlassEffectView` for the glass styles, `NSVisualEffectView` for blur. Tints go
   through the glass view's `tintColor`, or a gradient layer when fading.
 - **State** — one `@Observable` store. The overlay controller consumes an `Observations` stream of
@@ -77,8 +80,8 @@ Settings from Max 1.0 migrate automatically on first launch.
 
 ## Limitations
 
-- The bar lives on the primary display. If the Dock is summoned on another display, the bar does
-  not follow it.
+- While the Dock auto-hides, the bar cannot tell when the Dock moves to another display; it stays on
+  the display the Dock last reserved space on.
 - The auto-hide thickness is an estimate; use *Custom* height if it does not line up.
 - The global shortcut is fixed at ⌃⌥⌘M.
 

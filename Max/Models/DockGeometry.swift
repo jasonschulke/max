@@ -42,7 +42,7 @@ nonisolated struct DockInfo: Equatable, Sendable {
     }
 }
 
-/// Pure geometry for placing the bar over the Dock's strip of the primary display.
+/// Pure geometry for placing the bar over the Dock's strip of the display the Dock is on.
 nonisolated enum DockGeometry {
 
     /// Measured on macOS 26 with a bottom Dock: tilesize 37 reserves a 50 pt strip.
@@ -79,20 +79,38 @@ nonisolated enum DockGeometry {
         return max(1, resolved)
     }
 
-    /// Window frame for the bar. The edge against the screen border is pushed `cornerRadius` points
-    /// off-screen so only the corners facing into the screen are visibly rounded.
-    static func overlayFrame(thickness: Double, cornerRadius: Double, orientation: DockOrientation, screenFrame: CGRect, visibleFrame: CGRect) -> CGRect {
+    /// The display holding the Dock: the first whose visible frame leaves a strip on the Dock's edge.
+    /// `nil` when none does, as when the Dock auto-hides.
+    static func dockScreenIndex(in screens: [(frame: CGRect, visibleFrame: CGRect)], orientation: DockOrientation) -> Int? {
+        screens.firstIndex { reservedThickness(screenFrame: $0.frame, visibleFrame: $0.visibleFrame, orientation: orientation) > 0 }
+    }
+
+    /// Window frame for the bar: the Dock's strip, kept inside the screen so it never spills onto a neighboring display.
+    static func overlayFrame(thickness: Double, orientation: DockOrientation, screenFrame: CGRect, visibleFrame: CGRect) -> CGRect {
         let thickness = CGFloat(thickness)
-        let radius = CGFloat(max(0, cornerRadius))
         // Vertical Docks stop below the menu bar.
         let sideHeight = visibleFrame.maxY - screenFrame.minY
         switch orientation {
         case .bottom:
-            return CGRect(x: screenFrame.minX, y: screenFrame.minY - radius, width: screenFrame.width, height: thickness + radius)
+            return CGRect(x: screenFrame.minX, y: screenFrame.minY, width: screenFrame.width, height: thickness)
         case .left:
-            return CGRect(x: screenFrame.minX - radius, y: screenFrame.minY, width: thickness + radius, height: sideHeight)
+            return CGRect(x: screenFrame.minX, y: screenFrame.minY, width: thickness, height: sideHeight)
         case .right:
-            return CGRect(x: screenFrame.maxX - thickness, y: screenFrame.minY, width: thickness + radius, height: sideHeight)
+            return CGRect(x: screenFrame.maxX - thickness, y: screenFrame.minY, width: thickness, height: sideHeight)
+        }
+    }
+
+    /// Frame of the material inside the bar's window. It runs `cornerRadius` points past the screen edge,
+    /// where the window clips it, so only the corners facing into the screen show their radius.
+    static func materialFrame(in bounds: CGRect, cornerRadius: Double, orientation: DockOrientation) -> CGRect {
+        let radius = CGFloat(max(0, cornerRadius))
+        switch orientation {
+        case .bottom:
+            return CGRect(x: bounds.minX, y: bounds.minY - radius, width: bounds.width, height: bounds.height + radius)
+        case .left:
+            return CGRect(x: bounds.minX - radius, y: bounds.minY, width: bounds.width + radius, height: bounds.height)
+        case .right:
+            return CGRect(x: bounds.minX, y: bounds.minY, width: bounds.width + radius, height: bounds.height)
         }
     }
 

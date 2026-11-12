@@ -60,7 +60,7 @@ final class OverlayController {
             screenFrame: snapshot.screenFrame, visibleFrame: snapshot.visibleFrame
         )
         let frame = DockGeometry.overlayFrame(
-            thickness: thickness, cornerRadius: config.cornerRadius, orientation: snapshot.dock.orientation,
+            thickness: thickness, orientation: snapshot.dock.orientation,
             screenFrame: snapshot.screenFrame, visibleFrame: snapshot.visibleFrame
         )
         setFrame(frame, animated: animated)

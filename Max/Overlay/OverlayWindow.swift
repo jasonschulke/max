@@ -19,9 +19,4 @@ final class OverlayWindow: NSWindow {
 
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
-
-    /// Let the frame hang off the screen edge so only the inward-facing corners show their radius.
-    override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
-        frameRect
-    }
 }

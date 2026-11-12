@@ -27,6 +27,10 @@ final class OverlayBackdropView: NSView {
         let radius = CGFloat(configuration.cornerRadius)
         let tint = configuration.tint
         tintView.apply(tint, orientation: orientation)
+        // The material overhangs the screen edge and the window clips it; autoresizing keeps the overhang as the bar resizes.
+        let materialFrame = DockGeometry.materialFrame(in: bounds, cornerRadius: configuration.cornerRadius, orientation: orientation)
+        glassView.frame = materialFrame
+        blurView.frame = materialFrame
 
         switch configuration.style {
         case .glass, .clearGlass:

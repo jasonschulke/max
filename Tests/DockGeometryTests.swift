@@ -60,23 +60,43 @@ let dockGeometryTests: [TestCase] = [
         let thickness = DockGeometry.thickness(configuration: config, dock: dock, screenFrame: screen, visibleFrame: visibleNoDock)
         expect(thickness >= 1, "thickness was \(thickness)")
     },
-    TestCase(name: "bottom overlay spans the screen width and extends below it by the corner radius") {
-        let frame = DockGeometry.overlayFrame(thickness: 50, cornerRadius: 8, orientation: .bottom, screenFrame: screen, visibleFrame: visibleBottomDock)
-        expectEqual(frame, CGRect(x: 0, y: -8, width: 1920, height: 58))
+    TestCase(name: "bottom overlay covers the Dock strip across the screen width") {
+        let frame = DockGeometry.overlayFrame(thickness: 50, orientation: .bottom, screenFrame: screen, visibleFrame: visibleBottomDock)
+        expectEqual(frame, CGRect(x: 0, y: 0, width: 1920, height: 50))
     },
-    TestCase(name: "left overlay spans up to the menu bar and extends past the left edge") {
-        let frame = DockGeometry.overlayFrame(thickness: 60, cornerRadius: 8, orientation: .left, screenFrame: screen, visibleFrame: visibleLeftDock)
-        expectEqual(frame, CGRect(x: -8, y: 0, width: 68, height: 1050))
+    TestCase(name: "left overlay spans up to the menu bar") {
+        let frame = DockGeometry.overlayFrame(thickness: 60, orientation: .left, screenFrame: screen, visibleFrame: visibleLeftDock)
+        expectEqual(frame, CGRect(x: 0, y: 0, width: 60, height: 1050))
     },
     TestCase(name: "right overlay hugs the right edge") {
-        let frame = DockGeometry.overlayFrame(thickness: 60, cornerRadius: 0, orientation: .right, screenFrame: screen, visibleFrame: visibleRightDock)
+        let frame = DockGeometry.overlayFrame(thickness: 60, orientation: .right, screenFrame: screen, visibleFrame: visibleRightDock)
         expectEqual(frame, CGRect(x: 1860, y: 0, width: 60, height: 1050))
     },
     TestCase(name: "overlay frames respect a screen whose origin is not zero") {
         let offsetScreen = CGRect(x: 1920, y: -540, width: 960, height: 540)
         let visible = CGRect(x: 1920, y: -500, width: 960, height: 475)
-        let frame = DockGeometry.overlayFrame(thickness: 40, cornerRadius: 0, orientation: .bottom, screenFrame: offsetScreen, visibleFrame: visible)
+        let frame = DockGeometry.overlayFrame(thickness: 40, orientation: .bottom, screenFrame: offsetScreen, visibleFrame: visible)
         expectEqual(frame, CGRect(x: 1920, y: -540, width: 960, height: 40))
+    },
+    TestCase(name: "material overhangs only the screen edge by the corner radius") {
+        let bar = CGRect(x: 0, y: 0, width: 1920, height: 50)
+        expectEqual(DockGeometry.materialFrame(in: bar, cornerRadius: 8, orientation: .bottom), CGRect(x: 0, y: -8, width: 1920, height: 58))
+        let side = CGRect(x: 0, y: 0, width: 60, height: 1050)
+        expectEqual(DockGeometry.materialFrame(in: side, cornerRadius: 8, orientation: .left), CGRect(x: -8, y: 0, width: 68, height: 1050))
+        expectEqual(DockGeometry.materialFrame(in: side, cornerRadius: 8, orientation: .right), CGRect(x: 0, y: 0, width: 68, height: 1050))
+        expectEqual(DockGeometry.materialFrame(in: bar, cornerRadius: 0, orientation: .bottom), bar)
+    },
+    TestCase(name: "the Dock's display is the one reserving a strip on its edge") {
+        // The primary display with a secondary one below it, as macOS reports them.
+        let secondary = (frame: CGRect(x: 1356, y: -540, width: 960, height: 540), visibleFrame: CGRect(x: 1356, y: -540, width: 960, height: 540))
+        let secondaryWithDock = (frame: secondary.frame, visibleFrame: CGRect(x: 1356, y: -490, width: 960, height: 490))
+        let primaryWithDock = (frame: screen, visibleFrame: visibleBottomDock)
+        let primaryNoDock = (frame: screen, visibleFrame: visibleNoDock)
+        expectEqual(DockGeometry.dockScreenIndex(in: [primaryWithDock, secondary], orientation: .bottom), 0)
+        expectEqual(DockGeometry.dockScreenIndex(in: [primaryNoDock, secondaryWithDock], orientation: .bottom), 1)
+        expectEqual(DockGeometry.dockScreenIndex(in: [primaryNoDock, secondary], orientation: .bottom), nil)
+        // The menu bar insets the top edge, which never counts as the Dock's strip.
+        expectEqual(DockGeometry.dockScreenIndex(in: [primaryNoDock], orientation: .left), nil)
     },
     TestCase(name: "pointer hit-testing for auto-hide reveal and dismissal") {
         let zone = DockGeometry.revealZone(orientation: .bottom, screenFrame: screen, thickness: 50)
