@@ -57,7 +57,7 @@ struct SettingsView: View {
                 Text("Match Dock sizes the bar to the strip macOS reserves for the Dock, and follows the Dock when it is resized.")
             }
 
-            Section("Tint") {
+            Section {
                 Toggle("Tint the bar", isOn: config.tint.isEnabled)
                 Group {
                     ColorPicker("Color", selection: tintColor, supportsOpacity: false)
@@ -66,6 +66,12 @@ struct SettingsView: View {
                     Toggle("Fade toward the screen", isOn: config.tint.fadesUpward)
                 }
                 .disabled(!store.configuration.tint.isEnabled)
+            } header: {
+                Text("Tint")
+            } footer: {
+                if store.configuration.replacesDock {
+                    Text("While Max draws the Dock's icons, the tint colors the bar's solid base.")
+                }
             }
 
             Section("Behavior") {

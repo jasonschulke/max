@@ -25,14 +25,15 @@ final class OverlayBackdropView: NSView {
     required init?(coder: NSCoder) { fatalError("not supported") }
 
     /// `opaque` lays the material over a solid base, so nothing behind the bar (Apple's Dock) shows through.
-    /// The opacity setting then fades only the material.
+    /// The opacity setting then fades only the material, and the tint colors the base instead of the material.
     func apply(_ configuration: OverlayConfiguration, orientation: DockOrientation, opaque: Bool) {
         let radius = CGFloat(configuration.cornerRadius)
-        let tint = configuration.tint
+        let tint = opaque ? OverlayConfiguration.Tint() : configuration.tint
         tintView.apply(tint, orientation: orientation)
         baseView.isHidden = !opaque
         baseView.cornerRadius = radius
         baseView.orientation = orientation
+        baseView.tint = configuration.tint
         let materialAlpha = opaque ? CGFloat(configuration.opacity) : 1
         glassView.alphaValue = materialAlpha
         blurView.alphaValue = materialAlpha
@@ -95,8 +96,12 @@ final class OverlayBackdropView: NSView {
     }
 }
 
-/// The solid ground under the material, shaped like it: rounded only on the corners facing into the screen.
+/// The solid ground under the material, shaped like it (rounded only on the corners facing into the screen),
+/// in the window background color washed with the tint.
 private final class BaseView: NSView {
+    var tint = OverlayConfiguration.Tint() {
+        didSet { if tint != oldValue { needsDisplay = true } }
+    }
     var cornerRadius: CGFloat = 0 {
         didSet { if cornerRadius != oldValue { needsDisplay = true } }
     }
@@ -105,9 +110,24 @@ private final class BaseView: NSView {
     }
 
     override func draw(_ dirtyRect: NSRect) {
-        let shape = DockGeometry.materialFrame(in: bounds, cornerRadius: Double(cornerRadius), orientation: orientation)
+        let frame = DockGeometry.materialFrame(in: bounds, cornerRadius: Double(cornerRadius), orientation: orientation)
+        let shape = NSBezierPath(roundedRect: frame, xRadius: cornerRadius, yRadius: cornerRadius)
         NSColor.windowBackgroundColor.setFill()
-        NSBezierPath(roundedRect: shape, xRadius: cornerRadius, yRadius: cornerRadius).fill()
+        shape.fill()
+        guard tint.isEnabled else { return }
+        let solid = tint.color.withAlpha(tint.strength).nsColor
+        guard tint.fadesUpward, let gradient = NSGradient(starting: solid, ending: tint.color.withAlpha(0).nsColor) else {
+            solid.setFill()
+            shape.fill()
+            return
+        }
+        // From the screen edge inward, like the material's fading tint.
+        let angle: CGFloat = switch orientation {
+        case .bottom: 90
+        case .left: 0
+        case .right: 180
+        }
+        gradient.draw(in: shape, angle: angle)
     }
 }
 
