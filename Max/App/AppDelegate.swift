@@ -4,6 +4,7 @@ import Observation
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let store = SettingsStore()
     let dockObserver = DockObserver()
+    let loginItem = LoginItemSettings()
 
     private var overlay: OverlayController?
     private var hotKey: GlobalHotKey?

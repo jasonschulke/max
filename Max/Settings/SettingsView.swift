@@ -2,8 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable var store: SettingsStore
-    @State private var launchAtLogin = LaunchAtLogin.isEnabled
-    @State private var loginItemMessage: String?
+    let loginItem: LoginItemSettings
 
     private var config: Binding<OverlayConfiguration> { $store.configuration }
 
@@ -11,7 +10,7 @@ struct SettingsView: View {
         Form {
             Section {
                 Toggle("Show Dock bar", isOn: config.isEnabled)
-                Toggle("Launch at login", isOn: $launchAtLogin)
+                Toggle("Launch at login", isOn: Binding(get: { loginItem.isEnabled }, set: { loginItem.setEnabled($0) }))
             }
 
             Section("Appearance") {
@@ -70,16 +69,15 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 440)
-        .onAppear { launchAtLogin = LaunchAtLogin.isEnabled }
-        .onChange(of: launchAtLogin) { _, enabled in updateLaunchAtLogin(enabled) }
+        .onAppear { loginItem.refresh() }
         .alert("Launch at Login", isPresented: Binding(
-            get: { loginItemMessage != nil },
-            set: { if !$0 { loginItemMessage = nil } }
+            get: { loginItem.message != nil },
+            set: { if !$0 { loginItem.message = nil } }
         )) {
             Button("Open Login Items") { LaunchAtLogin.openSystemSettings() }
             Button("OK", role: .cancel) {}
         } message: {
-            Text(loginItemMessage ?? "")
+            Text(loginItem.message ?? "")
         }
     }
 
@@ -96,24 +94,38 @@ struct SettingsView: View {
         store.isInteracting = interacting
     }
 
-    private func updateLaunchAtLogin(_ enabled: Bool) {
-        guard enabled != LaunchAtLogin.isEnabled else { return }
-        do {
-            try LaunchAtLogin.setEnabled(enabled)
-            if enabled, LaunchAtLogin.requiresApproval {
-                loginItemMessage = "macOS needs you to approve Max under System Settings › General › Login Items."
-            }
-        } catch {
-            launchAtLogin = LaunchAtLogin.isEnabled
-            loginItemMessage = "Could not \(enabled ? "enable" : "disable") launch at login.\n\n\(error.localizedDescription)"
-        }
-    }
-
     private func percent(_ value: Double) -> String { "\(Int((value * 100).rounded()))%" }
     private func points(_ value: Double) -> String { "\(Int(value.rounded())) pt" }
     private func signedPoints(_ value: Double) -> String {
         let rounded = Int(value.rounded())
         return rounded > 0 ? "+\(rounded) pt" : "\(rounded) pt"
+    }
+}
+
+/// Launch-at-login state for the settings form. Lives outside the view, which keeps no `@State`:
+/// the Command Line Tools ship no plugin for the macOS 27 SDK's `@State` macro.
+@Observable
+final class LoginItemSettings {
+    private(set) var isEnabled = LaunchAtLogin.isEnabled
+    /// Shown in an alert when a change needs the user's attention.
+    var message: String?
+
+    func refresh() {
+        isEnabled = LaunchAtLogin.isEnabled
+    }
+
+    func setEnabled(_ enabled: Bool) {
+        isEnabled = enabled
+        guard enabled != LaunchAtLogin.isEnabled else { return }
+        do {
+            try LaunchAtLogin.setEnabled(enabled)
+            if enabled, LaunchAtLogin.requiresApproval {
+                message = "macOS needs you to approve Max under System Settings › General › Login Items."
+            }
+        } catch {
+            isEnabled = LaunchAtLogin.isEnabled
+            message = "Could not \(enabled ? "enable" : "disable") launch at login.\n\n\(error.localizedDescription)"
+        }
     }
 }
 
