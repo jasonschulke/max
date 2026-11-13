@@ -3,6 +3,8 @@
 #   make test     – run the model tests
 #   make run      – build, then launch it
 #   make install  – copy it to /Applications and refresh its icon and Spotlight entry
+#   make dmg      – package it as build.noindex/Max-<version>.dmg
+#   make release  – Developer ID signing, DMG, notarization, and stapling (see RELEASING.md)
 
 APP_NAME      := Max
 BUNDLE_ID     := jasonschulke.Max
@@ -19,6 +21,10 @@ BUILD_DIR     := build.noindex
 APP           := $(BUILD_DIR)/$(APP_NAME).app
 INSTALLED     := /Applications/$(APP_NAME).app
 LSREGISTER    := /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+DMG           := $(BUILD_DIR)/$(APP_NAME)-$(VERSION).dmg
+# Release signing: a "Developer ID Application: …" identity and a notarytool keychain profile.
+DEVELOPER_ID  ?=
+NOTARY_PROFILE ?=
 SDK           := $(shell xcrun --show-sdk-path)
 SOURCES       := $(shell find Max -name '*.swift' | sort)
 MODEL_SOURCES := $(sort $(wildcard Max/Models/*.swift))
@@ -29,7 +35,7 @@ ICON          := Max/Resources/Max.icns
 SWIFT_FLAGS   := -swift-version 6 -default-isolation MainActor -parse-as-library -O -sdk $(SDK)
 BINARIES      := $(foreach arch,$(ARCHS),$(BUILD_DIR)/$(APP_NAME)-$(arch))
 
-.PHONY: all build test run install clean
+.PHONY: all build test run install dmg release clean
 
 all: build
 
@@ -70,6 +76,28 @@ install: build
 	touch $(INSTALLED)
 	$(LSREGISTER) -f $(INSTALLED)
 	mdimport $(INSTALLED)
+
+dmg: build
+	rm -rf $(BUILD_DIR)/dmg $(DMG)
+	mkdir -p $(BUILD_DIR)/dmg
+	cp -R $(APP) $(BUILD_DIR)/dmg/
+	ln -s /Applications $(BUILD_DIR)/dmg/Applications
+	hdiutil create -volname "$(APP_NAME)" -srcfolder $(BUILD_DIR)/dmg -fs HFS+ -format UDZO -ov $(DMG)
+	rm -rf $(BUILD_DIR)/dmg
+	@echo "Built $(DMG)"
+
+release:
+	@test -n "$(DEVELOPER_ID)" || { echo 'Set DEVELOPER_ID="Developer ID Application: …" (see RELEASING.md)'; exit 1; }
+	@test -n "$(NOTARY_PROFILE)" || { echo 'Set NOTARY_PROFILE to a notarytool keychain profile (see RELEASING.md)'; exit 1; }
+	$(MAKE) build
+	# Notarization requires the hardened runtime and a secure timestamp.
+	codesign --force --options runtime --timestamp --sign "$(DEVELOPER_ID)" $(APP)
+	$(MAKE) dmg
+	codesign --force --timestamp --sign "$(DEVELOPER_ID)" $(DMG)
+	xcrun notarytool submit $(DMG) --keychain-profile "$(NOTARY_PROFILE)" --wait
+	xcrun stapler staple $(DMG)
+	xcrun stapler validate $(DMG)
+	@echo "Released $(DMG)"
 
 clean:
 	rm -rf $(BUILD_DIR)

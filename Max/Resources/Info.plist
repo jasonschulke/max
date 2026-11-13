@@ -16,6 +16,8 @@
 	<string>APPL</string>
 	<key>CFBundleIconFile</key>
 	<string>Max</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
