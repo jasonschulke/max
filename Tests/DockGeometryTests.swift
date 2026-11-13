@@ -115,6 +115,14 @@ let dockGeometryTests: [TestCase] = [
         // The menu bar insets the top edge, which never counts as the Dock's strip.
         expectEqual(DockGeometry.dockScreenIndex(in: [primaryNoDock], orientation: .left), nil)
     },
+    TestCase(name: "the window adds headroom on the bar's inward side only") {
+        let bar = CGRect(x: 0, y: 0, width: 1920, height: 50)
+        expectEqual(DockGeometry.windowFrame(bar: bar, headroom: 25, orientation: .bottom), CGRect(x: 0, y: 0, width: 1920, height: 75))
+        let side = CGRect(x: 1860, y: 0, width: 60, height: 1050)
+        expectEqual(DockGeometry.windowFrame(bar: side, headroom: 30, orientation: .right), CGRect(x: 1830, y: 0, width: 90, height: 1050))
+        expectEqual(DockGeometry.windowFrame(bar: CGRect(x: 0, y: 0, width: 60, height: 1050), headroom: 30, orientation: .left), CGRect(x: 0, y: 0, width: 90, height: 1050))
+        expectEqual(DockGeometry.windowFrame(bar: bar, headroom: -5, orientation: .bottom), bar)
+    },
     TestCase(name: "pointer hit-testing for auto-hide reveal and dismissal") {
         let zone = DockGeometry.revealZone(orientation: .bottom, screenFrame: screen, thickness: 50)
         expect(zone.triggers(CGPoint(x: 500, y: 0)), "pointer on the bottom edge should trigger")

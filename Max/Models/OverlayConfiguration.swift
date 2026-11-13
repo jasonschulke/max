@@ -105,6 +105,12 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     /// Sit over Apple's Dock and draw its icons where it draws them (needs Accessibility access),
     /// instead of sitting behind it.
     var skinsDock = false
+    /// Dots under running apps, drawn over the Dock.
+    var showsIndicators = true
+    /// Notification badges on icons, drawn over the Dock.
+    var showsBadges = true
+    /// Icons hop while their app launches, as the Dock's do.
+    var bouncesOnLaunch = true
     /// Scales the icons Max draws over the Dock, around the Dock's own size; spacing stays the Dock's.
     var iconScale = 1.0
     /// The display the Dock is kept on (its CoreGraphics UUID), or nil to let it move freely.
@@ -140,7 +146,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     // MARK: Codable (missing or unknown values fall back to defaults)
 
     private enum CodingKeys: String, CodingKey {
-        case isEnabled, skinsDock, iconScale, pinnedDisplay, style, blurMaterial, opacity, heightMode, heightAdjustment, customHeight
+        case isEnabled, skinsDock, showsIndicators, showsBadges, bouncesOnLaunch, iconScale, pinnedDisplay, style, blurMaterial, opacity, heightMode, heightAdjustment, customHeight
         case cornerRadius, tint, animationsEnabled, mirrorsDockAutoHide, globalShortcutEnabled
     }
 
@@ -149,6 +155,9 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
         let defaults = OverlayConfiguration()
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? defaults.isEnabled
         skinsDock = try container.decodeIfPresent(Bool.self, forKey: .skinsDock) ?? defaults.skinsDock
+        showsIndicators = try container.decodeIfPresent(Bool.self, forKey: .showsIndicators) ?? defaults.showsIndicators
+        showsBadges = try container.decodeIfPresent(Bool.self, forKey: .showsBadges) ?? defaults.showsBadges
+        bouncesOnLaunch = try container.decodeIfPresent(Bool.self, forKey: .bouncesOnLaunch) ?? defaults.bouncesOnLaunch
         iconScale = try container.decodeIfPresent(Double.self, forKey: .iconScale) ?? defaults.iconScale
         pinnedDisplay = try container.decodeIfPresent(String.self, forKey: .pinnedDisplay)
         style = container.decodeEnum(Style.self, forKey: .style) ?? defaults.style

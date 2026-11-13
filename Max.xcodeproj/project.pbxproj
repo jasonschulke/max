@@ -5,6 +5,8 @@
 	};
 	objectVersion = 56;
 	objects = {
+		F56A9DACA9299FB28422E312 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashWatcher.swift; sourceTree = "<group>"; };
+		E2626A67C7D5E22C7C121A22 = {isa = PBXBuildFile; fileRef = F56A9DACA9299FB28422E312 /* TrashWatcher.swift */; };
 		67C24D815D0B2AB955AEB6B9 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockSize.swift; sourceTree = "<group>"; };
 		569480145A680B7C8537C78C = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockPinner.swift; sourceTree = "<group>"; };
 		C0A3423D1A222C3FE05B5488 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockPinning.swift; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E2626A67C7D5E22C7C121A22,
 				6154F3F86DDAA5DC770B3D0C,
 				492A0B8448D4276AFAE21307,
 				81B10952D8AF272120833322,
@@ -357,6 +360,7 @@
 		BBAF9522EB04AF1ACFD6E1E5 = {
 			isa = PBXGroup;
 			children = (
+				F56A9DACA9299FB28422E312 /* TrashWatcher.swift */,
 				569480145A680B7C8537C78C /* DockPinner.swift */,
 				67C24D815D0B2AB955AEB6B9 /* DockSize.swift */,
 				AE0A236A4AD65CFD10781CA6 /* WindowCornerOverride.swift */,

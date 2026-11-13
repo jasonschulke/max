@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Max's settings: one tab per area, each a grouped form.
 struct SettingsView: View {
@@ -7,6 +8,7 @@ struct SettingsView: View {
     let skin: DockSkinTracker
     let dockSize: DockSize
     let pinner: DockPinner
+    let trash: TrashWatcher
     let dockEditor: DockEditor
     let windowCorners: WindowCornerOverride
 
@@ -16,7 +18,7 @@ struct SettingsView: View {
                 GeneralPane(store: store, loginItem: loginItem)
             }
             Tab("Dock", systemImage: "dock.rectangle") {
-                DockPane(store: store, skin: skin, dockSize: dockSize, pinner: pinner)
+                DockPane(store: store, skin: skin, dockSize: dockSize, pinner: pinner, trash: trash)
             }
             Tab("Appearance", systemImage: "paintpalette") {
                 AppearancePane(store: store)
@@ -78,6 +80,7 @@ struct DockPane: View {
     let skin: DockSkinTracker
     let dockSize: DockSize
     let pinner: DockPinner
+    let trash: TrashWatcher
 
     private var config: Binding<OverlayConfiguration> { $store.configuration }
     private var skins: Bool { store.configuration.skinsDock }
@@ -134,6 +137,25 @@ struct DockPane: View {
             }
 
             Section {
+                Toggle("Running indicators", isOn: config.showsIndicators)
+                Toggle("Badges", isOn: config.showsBadges)
+                Toggle("Bounce while apps open", isOn: config.bouncesOnLaunch)
+                LabeledContent("Full Trash icon") {
+                    if trash.hasAccess {
+                        Label("On", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Button("Allow Full Disk Access…", action: trash.openFullDiskAccessSettings)
+                    }
+                }
+            } header: {
+                Text("Icons")
+            } footer: {
+                Text("Max draws these while it draws over the Dock. It also shows today's date on Calendar. Showing a full Trash needs Full Disk Access, because macOS protects the Trash folder.")
+            }
+            .disabled(!skins)
+
+            Section {
                 Picker("Keep the Dock on", selection: config.pinnedDisplay) {
                     Text("Any display").tag(String?.none)
                     ForEach(pinner.displays) { display in
@@ -155,7 +177,7 @@ struct DockPane: View {
             }
         }
         .formStyle(.grouped)
-        .frame(height: 620)
+        .frame(height: 680)
         .onAppear { pinner.refresh() }
     }
 
@@ -273,7 +295,7 @@ struct WindowsPane: View {
                 LabeledContent("Apply to open apps") {
                     HStack {
                         Button("Relaunch Finder", action: windowCorners.relaunchFinder)
-                        Button("Relaunch Apps…", action: windowCorners.prepareRelaunch)
+                        Button("Relaunch Apps…") { windowCorners.prepareRelaunch() }
                     }
                 }
             } header: {
@@ -281,9 +303,51 @@ struct WindowsPane: View {
             } footer: {
                 Text("Sets the corner radius of every app's windows; macOS uses 16 pt. Apps pick it up when they reopen. This relies on an undocumented macOS setting that a future update could change.")
             }
+
+            Section {
+                ForEach(windowCorners.exceptions) { exception in
+                    HStack(spacing: 8) {
+                        if let url = exception.url {
+                            Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+                                .resizable()
+                                .frame(width: 20, height: 20)
+                        }
+                        Text(exception.name)
+                        if exception.isSandboxed {
+                            Image(systemName: "exclamationmark.triangle")
+                                .foregroundStyle(.secondary)
+                                .help("This app runs in a sandbox and may not pick up its exception.")
+                        }
+                        Spacer()
+                        Picker("Radius", selection: Binding(
+                            get: { exception.radius },
+                            set: { windowCorners.setException(exception.id, radius: $0) }
+                        )) {
+                            Text("Square").tag(0.0)
+                            ForEach([4.0, 8.0, 12.0], id: \.self) { Text("\(Int($0)) pt").tag($0) }
+                            Text("16 pt (macOS)").tag(WindowCornerRadius.systemDefault)
+                        }
+                        .labelsHidden()
+                        .fixedSize()
+                        Button("Relaunch", systemImage: "arrow.clockwise") { windowCorners.prepareRelaunch(only: exception.id) }
+                            .labelStyle(.iconOnly)
+                            .buttonStyle(.borderless)
+                            .help("Relaunch \(exception.name)")
+                        Button("Remove", systemImage: "minus.circle") { windowCorners.removeException(exception.id) }
+                            .labelStyle(.iconOnly)
+                            .buttonStyle(.borderless)
+                            .help("Remove the exception")
+                    }
+                }
+                Button("Add App…", action: chooseApps)
+            } header: {
+                Text("Exceptions")
+            } footer: {
+                Text("Give an app its own radius instead of the one above. Sandboxed apps, like most App Store apps, keep their own copy of settings, so an exception may not reach them.")
+            }
         }
         .formStyle(.grouped)
-        .frame(height: 300)
+        .frame(height: 480)
         .alert("Relaunch \(windowCorners.pendingRelaunch.count) Apps?", isPresented: Binding(
             get: { !windowCorners.pendingRelaunch.isEmpty },
             set: { if !$0 { windowCorners.cancelRelaunch() } }
@@ -297,6 +361,15 @@ struct WindowsPane: View {
 
     private func cornerRadiusLabel(_ value: Double) -> String {
         value == 0 ? "Square" : "\(Int(value)) pt"
+    }
+
+    private func chooseApps() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.application]
+        panel.allowsMultipleSelection = true
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.prompt = "Add"
+        if panel.runModal() == .OK { windowCorners.addExceptions(panel.urls) }
     }
 }
 

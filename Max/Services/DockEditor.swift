@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 import Observation
 
 /// Edits what Apple's Dock keeps (`persistent-apps` and `persistent-others` in `com.apple.dock`), then applies the
@@ -41,17 +42,25 @@ final class DockEditor {
     private(set) var others: [Entry] = []
     var selection: Set<UUID> = []
     private(set) var hasChanges = false
+    /// Saved Dock arrangements, by name.
+    private(set) var profileNames: [String] = []
+    /// Drives the "Save as Profile" prompt.
+    var isNamingProfile = false
+    var newProfileName = ""
 
     @ObservationIgnored private let defaults: UserDefaults
     private static let domain = "com.apple.dock" as CFString
     /// Max's copy of the Dock's items from before its first edit.
     static let backupKey = "dockBackup"
+    /// Saved arrangements: name to the Dock's two item lists.
+    static let profilesKey = "dockProfiles"
 
     var hasBackup: Bool { defaults.dictionary(forKey: Self.backupKey) != nil }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         reload()
+        profileNames = Self.sortedNames(profiles)
     }
 
     /// Reads the Dock's current items, dropping unapplied edits.
@@ -94,16 +103,60 @@ final class DockEditor {
 
     /// Writes the edit to the Dock's preferences and restarts the Dock to load it. The first time, keeps a backup.
     func apply() {
+        write(apps: apps.map(\.preferences), others: others.map(\.preferences))
+        hasChanges = false
+    }
+
+    // MARK: Profiles
+
+    /// Saves the arrangement shown in the editor under a name, replacing a profile with the same name.
+    func saveProfile(named name: String) {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        var saved = profiles
+        saved[name] = [
+            Section.apps.preferenceKey: apps.map(\.preferences),
+            Section.others.preferenceKey: others.map(\.preferences),
+        ]
+        defaults.set(saved, forKey: Self.profilesKey)
+        profileNames = Self.sortedNames(saved)
+        newProfileName = ""
+    }
+
+    /// Puts a saved arrangement on the Dock.
+    func applyProfile(named name: String) {
+        guard let profile = profiles[name] as? [String: Any] else { return }
+        write(apps: profile[Section.apps.preferenceKey] as? [[String: Any]] ?? [],
+              others: profile[Section.others.preferenceKey] as? [[String: Any]] ?? [])
+        reload()
+    }
+
+    func deleteProfile(named name: String) {
+        var saved = profiles
+        saved[name] = nil
+        defaults.set(saved, forKey: Self.profilesKey)
+        profileNames = Self.sortedNames(saved)
+    }
+
+    private var profiles: [String: Any] {
+        defaults.dictionary(forKey: Self.profilesKey) ?? [:]
+    }
+
+    private static func sortedNames(_ profiles: [String: Any]) -> [String] {
+        profiles.keys.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
+
+    /// Writes both lists to the Dock and restarts it, keeping a backup of the Dock from before Max's first write.
+    private func write(apps: [[String: Any]], others: [[String: Any]]) {
         if !hasBackup {
             defaults.set([
                 Section.apps.preferenceKey: Self.read(.apps),
                 Section.others.preferenceKey: Self.read(.others),
             ], forKey: Self.backupKey)
         }
-        Self.write(apps.map(\.preferences), to: .apps)
-        Self.write(others.map(\.preferences), to: .others)
+        Self.write(apps, to: .apps)
+        Self.write(others, to: .others)
         Self.restartDock()
-        hasChanges = false
     }
 
     /// Puts back the Dock's items from before Max's first edit.

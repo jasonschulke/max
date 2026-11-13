@@ -126,6 +126,16 @@ nonisolated enum DockGeometry {
         }
     }
 
+    /// The bar's window: the bar plus `headroom` on its inward side, room for icons to hop into while apps launch.
+    static func windowFrame(bar: CGRect, headroom: Double, orientation: DockOrientation) -> CGRect {
+        let extra = CGFloat(max(0, headroom))
+        switch orientation {
+        case .bottom: return CGRect(x: bar.minX, y: bar.minY, width: bar.width, height: bar.height + extra)
+        case .left: return CGRect(x: bar.minX, y: bar.minY, width: bar.width + extra, height: bar.height)
+        case .right: return CGRect(x: bar.minX - extra, y: bar.minY, width: bar.width + extra, height: bar.height)
+        }
+    }
+
     /// Pointer regions used to mirror the Dock's auto-hide behavior.
     struct RevealZone: Equatable, Sendable {
         /// Touching this edge strip (a couple of points deep) reveals the Dock.

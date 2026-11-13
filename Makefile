@@ -10,8 +10,9 @@ VERSION       := 2.0.0
 BUILD_NUMBER  := 2
 MIN_MACOS     := 26.0
 ARCHS         := arm64 x86_64
-# Ad-hoc by default. Accessibility access is tied to the signature, so a stable identity keeps it across builds.
-SIGN_IDENTITY ?= -
+# Accessibility access is tied to the signature. An ad-hoc one (-) changes every build; the self-signed
+# "Max Local Signing" certificate (Tools/make-signing-identity.sh) does not, so it is used when present.
+SIGN_IDENTITY ?= $(shell security find-certificate -c "Max Local Signing" >/dev/null 2>&1 && echo "Max Local Signing" || echo -)
 
 APP           := $(APP_NAME).app
 BUILD_DIR     := build

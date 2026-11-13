@@ -23,6 +23,8 @@ final class DockSkinTracker {
     @ObservationIgnored private var dragStart: (inDock: Bool, pasteboardCount: Int, location: CGPoint)?
     @ObservationIgnored private var bundleIDs: [URL: String] = [:]
     @ObservationIgnored private var hasAskedForAccess = false
+    /// Apps that have started launching but not finished, by bundle identifier, with when they started.
+    @ObservationIgnored private var launching: [String: Date] = [:]
 
     /// Badges and running state change without notice, so the Dock is also re-read on this interval.
     private let pollInterval = 2.0
@@ -30,6 +32,8 @@ final class DockSkinTracker {
     private let burstDelays = [0.0, 0.15, 0.4, 0.8, 1.5]
     /// How long the skin stays away after a drag ends, while the Dock lands the dropped item.
     private let dragSettleDelay = 0.35
+    /// An app that never reports finishing its launch stops bouncing after this long.
+    private let launchTimeout = 20.0
 
     func start() {
         guard !isRunning else { return }
@@ -39,6 +43,7 @@ final class DockSkinTracker {
         for name in [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification, NSWorkspace.didActivateApplicationNotification] {
             observe(workspace, name)
         }
+        observeLaunches(workspace)
         observe(NotificationCenter.default, NSApplication.didChangeScreenParametersNotification)
         observe(DistributedNotificationCenter.default(), Notification.Name("com.apple.dock.prefchanged"))
 
@@ -125,7 +130,36 @@ final class DockSkinTracker {
         }
         let screenHeight = NSScreen.screens.first?.frame.height ?? 0
         let frontmost = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+        launching = launching.filter { Date().timeIntervalSince($0.value) < launchTimeout }
         let updated = elements.compactMap { item(from: $0, screenHeight: screenHeight, frontmost: frontmost) }
+        if updated != items { items = updated }
+    }
+
+    // MARK: Launches
+
+    private func observeLaunches(_ center: NotificationCenter) {
+        let events: [(Notification.Name, Bool)] = [
+            (NSWorkspace.willLaunchApplicationNotification, true),
+            (NSWorkspace.didLaunchApplicationNotification, false),
+            (NSWorkspace.didTerminateApplicationNotification, false),
+        ]
+        for (name, started) in events {
+            let token = center.addObserver(forName: name, object: nil, queue: .main) { [weak self] note in
+                let bundleID = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier
+                MainActor.assumeIsolated { self?.launch(bundleID, started: started) }
+            }
+            observers.append((center, token))
+        }
+    }
+
+    private func launch(_ bundleID: String?, started: Bool) {
+        guard let bundleID else { return }
+        launching[bundleID] = started ? Date() : nil
+        let updated = items.map { item -> SkinItem in
+            var item = item
+            item.isLaunching = item.url.flatMap { self.bundleID(for: $0) }.map { launching[$0] != nil } ?? false
+            return item
+        }
         if updated != items { items = updated }
     }
 
@@ -149,8 +183,9 @@ final class DockSkinTracker {
             isRunning: (values[5] as? NSNumber)?.boolValue ?? false,
             badge: (values[6] as? String).flatMap { $0.isEmpty ? nil : $0 }
         )
-        if item.kind == .app, let url, let frontmost {
-            item.isActive = bundleID(for: url) == frontmost
+        if item.kind == .app, let url, let id = bundleID(for: url) {
+            item.isActive = id == frontmost
+            item.isLaunching = launching[id] != nil
         }
         return item
     }

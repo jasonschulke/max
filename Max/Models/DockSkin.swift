@@ -15,6 +15,8 @@ nonisolated struct SkinItem: Equatable, Sendable {
     var isRunning = false
     /// The frontmost app.
     var isActive = false
+    /// The app is still launching; the Dock bounces its icon meanwhile.
+    var isLaunching = false
     /// The badge an app shows on its Dock tile, such as an unread count.
     var badge: String?
 

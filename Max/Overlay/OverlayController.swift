@@ -6,6 +6,7 @@ final class OverlayController {
     private let store: SettingsStore
     private let dockObserver: DockObserver
     private let skinTracker: DockSkinTracker
+    private let trash: TrashWatcher
     private let revealTracker = DockRevealTracker()
     private let window = OverlayWindow()
     private let backdrop: OverlayBackdropView
@@ -17,17 +18,18 @@ final class OverlayController {
     private let changeDuration = 0.25
     private let dragFadeDuration = 0.12
 
-    init(store: SettingsStore, dockObserver: DockObserver, skinTracker: DockSkinTracker) {
+    init(store: SettingsStore, dockObserver: DockObserver, skinTracker: DockSkinTracker, trash: TrashWatcher) {
         self.store = store
         self.dockObserver = dockObserver
         self.skinTracker = skinTracker
+        self.trash = trash
         let content = NSView(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
+        // The backdrop is laid out on every change: it fills the bar, not the headroom above it.
         backdrop = OverlayBackdropView(frame: content.bounds)
         skinView = DockSkinView(frame: content.bounds)
-        for view in [backdrop, skinView] as [NSView] {
-            view.autoresizingMask = [.width, .height]
-            content.addSubview(view)
-        }
+        skinView.autoresizingMask = [.width, .height]
+        content.addSubview(backdrop)
+        content.addSubview(skinView)
         window.contentView = content
     }
 
@@ -46,11 +48,12 @@ final class OverlayController {
         var items: [SkinItem] = []
         var canRead = false
         var isDragging = false
+        var trashIsFull = false
     }
 
     func start() {
         observationTask?.cancel()
-        observationTask = Task { [store, dockObserver, skinTracker, revealTracker] in
+        observationTask = Task { [store, dockObserver, skinTracker, trash, revealTracker] in
             // Emits the current snapshot first, then one per change (coalesced per run-loop turn).
             let snapshots = Observations {
                 let configuration = store.configuration
@@ -62,7 +65,7 @@ final class OverlayController {
                     visibleFrame: dockObserver.visibleFrame,
                     isRevealed: revealTracker.isRevealed,
                     skin: configuration.skinsDock
-                        ? Skin(items: skinTracker.items, canRead: skinTracker.isTrusted, isDragging: skinTracker.isDragging)
+                        ? Skin(items: skinTracker.items, canRead: skinTracker.isTrusted, isDragging: skinTracker.isDragging, trashIsFull: trash.isFull)
                         : Skin()
                 )
             }
@@ -86,18 +89,27 @@ final class OverlayController {
             thickness: thickness, orientation: snapshot.dock.orientation,
             screenFrame: snapshot.screenFrame, visibleFrame: snapshot.visibleFrame
         )
-        setFrame(frame, animated: animated)
-
         // Skinning, the bar sits over Apple's Dock, opaque, drawing the Dock's items where the Dock draws them.
         // Until Max may read the Dock (Accessibility access), it stays behind the Dock instead.
+        let skins = config.skinsDock && snapshot.skin.canRead
+        // Bouncing icons hop past the bar, into clear, click-through headroom.
+        let headroom = skins && config.bouncesOnLaunch ? max(20, thickness * 0.5) : 0
+        let windowFrame = DockGeometry.windowFrame(bar: frame, headroom: headroom, orientation: snapshot.dock.orientation)
+        setFrame(windowFrame, animated: animated)
+        let barRect = frame.offsetBy(dx: -windowFrame.minX, dy: -windowFrame.minY)
+        backdrop.frame = barRect
+
         if config.skinsDock { skinTracker.start() } else { skinTracker.stop() }
         skinTracker.dockRegion = frame
-        let skins = config.skinsDock && snapshot.skin.canRead
         backdrop.apply(config, orientation: snapshot.dock.orientation, opaque: skins)
         window.setCoversDock(skins)
         skinView.isHidden = !skins
         if skins {
-            skinView.update(items: snapshot.skin.items, orientation: snapshot.dock.orientation, iconScale: config.iconScale)
+            let style = DockSkinView.Style(
+                iconScale: config.iconScale, showsIndicators: config.showsIndicators, showsBadges: config.showsBadges,
+                bounces: config.bouncesOnLaunch, trashIsFull: snapshot.skin.trashIsFull
+            )
+            skinView.update(items: snapshot.skin.items, orientation: snapshot.dock.orientation, style: style, barRect: barRect)
         }
 
         let followsDock = config.isEnabled && snapshot.dock.autoHides && config.mirrorsDockAutoHide

@@ -38,6 +38,17 @@ struct DockEditorView: View {
                 .fixedSize()
                 Button("Remove", systemImage: "minus") { editor.removeSelected() }
                     .disabled(editor.selection.isEmpty)
+                Menu("Profiles") {
+                    ForEach(editor.profileNames, id: \.self) { name in
+                        Menu(name) {
+                            Button("Put on the Dock") { editor.applyProfile(named: name) }
+                            Button("Delete") { editor.deleteProfile(named: name) }
+                        }
+                    }
+                    if !editor.profileNames.isEmpty { Divider() }
+                    Button("Save as Profile…") { editor.isNamingProfile = true }
+                }
+                .fixedSize()
                 Menu("More") {
                     Button("Reload from the Dock") { editor.reload() }
                     Button("Restore the Dock from Before Max's Edits") { editor.restoreBackup() }
@@ -61,6 +72,13 @@ struct DockEditorView: View {
         }
         .onAppear {
             if !editor.hasChanges { editor.reload() }
+        }
+        .alert("Save Dock Profile", isPresented: $editor.isNamingProfile) {
+            TextField("Name", text: $editor.newProfileName)
+            Button("Save") { editor.saveProfile(named: editor.newProfileName) }
+            Button("Cancel", role: .cancel) { editor.newProfileName = "" }
+        } message: {
+            Text("Saves the arrangement shown here, so you can switch back to it from here or the menu bar.")
         }
     }
 
