@@ -158,6 +158,8 @@ nonisolated private final class EdgeClamp: @unchecked Sendable {
         let (edges, orientation) = lock.withLock { (edges, orientation) }
         guard let point = DockPinning.clamped(event.location, edges: edges, orientation: orientation) else { return }
         event.location = point
+        // Changing the event alone may not move the pointer itself, so move it too.
+        CGWarpMouseCursorPosition(point)
         // Drop the push toward the edge too, so the Dock never sees one.
         switch orientation {
         case .bottom: event.setIntegerValueField(.mouseEventDeltaY, value: min(0, event.getIntegerValueField(.mouseEventDeltaY)))

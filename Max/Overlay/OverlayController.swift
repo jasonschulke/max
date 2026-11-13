@@ -49,6 +49,7 @@ final class OverlayController {
         var canRead = false
         var isDragging = false
         var trashIsFull = false
+        var dockFrame: CGRect?
     }
 
     func start() {
@@ -65,7 +66,8 @@ final class OverlayController {
                     visibleFrame: dockObserver.visibleFrame,
                     isRevealed: revealTracker.isRevealed,
                     skin: configuration.skinsDock
-                        ? Skin(items: skinTracker.items, canRead: skinTracker.isTrusted, isDragging: skinTracker.isDragging, trashIsFull: trash.isFull)
+                        ? Skin(items: skinTracker.items, canRead: skinTracker.isTrusted, isDragging: skinTracker.isDragging,
+                               trashIsFull: trash.isFull, dockFrame: skinTracker.dockFrame)
                         : Skin()
                 )
             }
@@ -109,7 +111,9 @@ final class OverlayController {
                 iconScale: config.iconScale, showsIndicators: config.showsIndicators, showsBadges: config.showsBadges,
                 bounces: config.bouncesOnLaunch, trashIsFull: snapshot.skin.trashIsFull
             )
-            skinView.update(items: snapshot.skin.items, orientation: snapshot.dock.orientation, style: style, barRect: barRect)
+            // Only what is really on this display: the Dock can sit on another one, or hidden below its edge.
+            let items = snapshot.skin.items.filter { $0.frame.intersects(snapshot.screenFrame) }
+            skinView.update(items: items, orientation: snapshot.dock.orientation, style: style, barRect: barRect)
         }
 
         let followsDock = config.isEnabled && snapshot.dock.autoHides && config.mirrorsDockAutoHide
@@ -125,6 +129,9 @@ final class OverlayController {
             visible = false
         } else if skins, snapshot.skin.isDragging {
             // Step aside so the Dock's own drag feedback shows.
+            visible = false
+        } else if skins, let dockFrame = snapshot.skin.dockFrame, !dockFrame.intersects(snapshot.screenFrame) {
+            // The Dock is on another display, or hidden off this one: there is nothing here to draw over.
             visible = false
         } else if snapshot.dock.autoHides {
             visible = config.mirrorsDockAutoHide && snapshot.isRevealed

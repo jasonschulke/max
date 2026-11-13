@@ -7,6 +7,8 @@ import Observation
 @Observable
 final class DockSkinTracker {
     private(set) var items: [SkinItem] = []
+    /// Where the Dock's whole list of items sits, in AppKit screen coordinates. Off screen while the Dock is hidden.
+    private(set) var dockFrame: CGRect?
     private(set) var isTrusted = AXIsProcessTrusted()
     /// True while something is dragged in the Dock (reordering, dropping files) so the skin can step aside.
     private(set) var isDragging = false
@@ -74,6 +76,7 @@ final class DockSkinTracker {
         burstTimers = []
         dockList = nil
         if !items.isEmpty { items = [] }
+        if dockFrame != nil { dockFrame = nil }
         if isDragging { isDragging = false }
     }
 
@@ -130,6 +133,8 @@ final class DockSkinTracker {
         }
         let screenHeight = NSScreen.screens.first?.frame.height ?? 0
         let frontmost = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+        let listFrame = Self.frame(of: list, screenHeight: screenHeight)
+        if listFrame != dockFrame { dockFrame = listFrame }
         launching = launching.filter { Date().timeIntervalSince($0.value) < launchTimeout }
         let updated = elements.compactMap { item(from: $0, screenHeight: screenHeight, frontmost: frontmost) }
         if updated != items { items = updated }
@@ -188,6 +193,15 @@ final class DockSkinTracker {
             item.isLaunching = launching[id] != nil
         }
         return item
+    }
+
+    private static func frame(of element: AXUIElement, screenHeight: CGFloat) -> CGRect? {
+        var position: AnyObject?
+        var size: AnyObject?
+        guard AXUIElementCopyAttributeValue(element, kAXPositionAttribute as CFString, &position) == .success,
+              AXUIElementCopyAttributeValue(element, kAXSizeAttribute as CFString, &size) == .success,
+              let position, let size, let origin = point(position), let extent = Self.size(size) else { return nil }
+        return DockSkin.appKitFrame(axPosition: origin, axSize: extent, primaryScreenHeight: screenHeight)
     }
 
     /// Missing attributes come back as AXValues of the error type, which these reject.
