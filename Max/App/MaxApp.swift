@@ -38,19 +38,37 @@ private struct MenuBarMenu: View {
         }
         Divider()
         Button("Settings…") {
-            NSApp.activate()
             openSettings()
+            // SwiftUI's Settings window; it is also Max's only titled window that isn't a panel.
+            WindowFront.bring { $0.identifier?.rawValue == "com_apple_SwiftUI_Settings_window" || ($0.styleMask.contains(.titled) && !($0 is NSPanel)) }
         }
         .keyboardShortcut(",")
         Button("About Max") {
-            NSApp.activate()
             NSApp.orderFrontStandardAboutPanel(nil)
+            WindowFront.bring { $0 is NSPanel && $0.styleMask.contains(.titled) }
         }
         Divider()
         Button("Quit Max") {
             NSApp.terminate(nil)
         }
         .keyboardShortcut("q")
+    }
+}
+
+/// Brings one of Max's windows to the front. Max is a menu bar app, so it is rarely the active app when a window
+/// opens, and macOS would otherwise leave the window behind the frontmost app's.
+enum WindowFront {
+    static func bring(_ matches: @escaping (NSWindow) -> Bool) {
+        NSApp.activate()
+        // SwiftUI may create the window a moment later; look again until it shows up.
+        for delay in [0.0, 0.1, 0.3] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                guard let window = NSApp.windows.first(where: { $0.isVisible && matches($0) })
+                    ?? NSApp.windows.first(where: matches) else { return }
+                window.orderFrontRegardless()
+                window.makeKey()
+            }
+        }
     }
 }
 
