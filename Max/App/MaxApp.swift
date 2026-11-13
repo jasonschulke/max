@@ -6,7 +6,7 @@ struct MaxApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            MenuBarMenu(store: appDelegate.store, dockEditor: appDelegate.dockEditor)
+            MenuBarMenu(store: appDelegate.store, profiles: appDelegate.dockProfiles)
         } label: {
             Image(nsImage: MenuBarIcon.image)
                 .accessibilityLabel("Max")
@@ -14,25 +14,26 @@ struct MaxApp: App {
 
         Settings {
             SettingsView(
-                store: appDelegate.store, loginItem: appDelegate.loginItem, skin: appDelegate.skinTracker,
-                dockSize: appDelegate.dockSize, pinner: appDelegate.pinner, trash: appDelegate.trash, dockEditor: appDelegate.dockEditor,
-                windowCorners: appDelegate.windowCorners
+                store: appDelegate.store, navigation: appDelegate.settingsNavigation, loginItem: appDelegate.loginItem,
+                skin: appDelegate.skinTracker, dockSize: appDelegate.dockSize, pinner: appDelegate.pinner,
+                trash: appDelegate.trash, profiles: appDelegate.dockProfiles, windowCorners: appDelegate.windowCorners
             )
         }
+        .windowResizability(.contentSize)
     }
 }
 
 private struct MenuBarMenu: View {
     @Bindable var store: SettingsStore
-    let dockEditor: DockEditor
+    let profiles: DockProfiles
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         Toggle("Show Dock Bar", isOn: $store.configuration.isEnabled)
-        if !dockEditor.profileNames.isEmpty {
+        if !profiles.names.isEmpty {
             Menu("Dock Profile") {
-                ForEach(dockEditor.profileNames, id: \.self) { name in
-                    Button(name) { dockEditor.applyProfile(named: name) }
+                ForEach(profiles.names, id: \.self) { name in
+                    Button(name) { profiles.apply(name) }
                 }
             }
         }

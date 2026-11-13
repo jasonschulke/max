@@ -1,42 +1,77 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Max's settings: one tab per area, each a grouped form.
+/// The sections of Settings, in the order of the dock that switches between them.
+enum SettingsPane: String, CaseIterable, Identifiable {
+    case general, dock, appearance, profiles, windows, about
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .general: "General"
+        case .dock: "Dock"
+        case .appearance: "Appearance"
+        case .profiles: "Profiles"
+        case .windows: "Windows"
+        case .about: "About"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .general: "gearshape.fill"
+        case .dock: "dock.rectangle"
+        case .appearance: "paintpalette.fill"
+        case .profiles: "square.stack.3d.up.fill"
+        case .windows: "macwindow"
+        case .about: "info.circle.fill"
+        }
+    }
+}
+
+/// Which section Settings shows, and which dock tile the pointer is over. Kept outside the views, which hold no
+/// `@State` (the Command Line Tools ship no plugin for the macOS 27 SDK's `@State` macro).
+@Observable
+final class SettingsNavigation {
+    var pane: SettingsPane = .general
+    var hovered: SettingsPane?
+}
+
+/// Max's settings: a 4:3 window with the current section above a dock of all of them.
 struct SettingsView: View {
     @Bindable var store: SettingsStore
+    let navigation: SettingsNavigation
     let loginItem: LoginItemSettings
     let skin: DockSkinTracker
     let dockSize: DockSize
     let pinner: DockPinner
     let trash: TrashWatcher
-    let dockEditor: DockEditor
+    let profiles: DockProfiles
     let windowCorners: WindowCornerOverride
 
     var body: some View {
-        TabView {
-            Tab("General", systemImage: "gearshape") {
-                GeneralPane(store: store, loginItem: loginItem, skin: skin)
-            }
-            Tab("Dock", systemImage: "dock.rectangle") {
-                DockPane(store: store, skin: skin, dockSize: dockSize, pinner: pinner, trash: trash)
-            }
-            Tab("Appearance", systemImage: "paintpalette") {
-                AppearancePane(store: store)
-            }
-            Tab("Dock Items", systemImage: "square.grid.3x1.below.line.grid.1x2") {
-                DockEditorView(editor: dockEditor)
-                    .frame(height: 600)
-            }
-            Tab("Windows", systemImage: "macwindow") {
-                WindowsPane(windowCorners: windowCorners)
-            }
-            Tab("About", systemImage: "info.circle") {
-                AboutPane()
-            }
+        VStack(spacing: 0) {
+            pane
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            SettingsDock(navigation: navigation)
         }
-        .frame(width: 540)
+        .frame(width: 720, height: 540)
+        .background(ThemeBackground())
         .tint(MaxTheme.accent)
         .preferredColorScheme(colorScheme)
+        .navigationTitle(navigation.pane.title)
+    }
+
+    @ViewBuilder private var pane: some View {
+        switch navigation.pane {
+        case .general: GeneralPane(store: store, loginItem: loginItem, skin: skin)
+        case .dock: DockPane(store: store, skin: skin, dockSize: dockSize, pinner: pinner, trash: trash)
+        case .appearance: AppearancePane(store: store)
+        case .profiles: ProfilesPane(profiles: profiles)
+        case .windows: WindowsPane(windowCorners: windowCorners)
+        case .about: AboutPane()
+        }
     }
 
     private var colorScheme: ColorScheme? {
@@ -45,6 +80,80 @@ struct SettingsView: View {
         case .light: .light
         case .dark: .dark
         }
+    }
+}
+
+/// The bar along the bottom of Settings, a small Max: a tile per section in the icon's lavenders, a dot under the
+/// open one, and its name on hover. ⌘1 to ⌘6 switch sections.
+struct SettingsDock: View {
+    let navigation: SettingsNavigation
+    @Environment(\.colorScheme) private var colorScheme
+
+    /// Light to dark, as on the app icon's bar.
+    private static let tiles: [UInt32] = [0xDDD6FE, 0xC4B5FD, 0xA78BFA, 0x8B7CF6, 0x7462E0, 0x6D5BD0]
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ForEach(Array(SettingsPane.allCases.enumerated()), id: \.element) { index, pane in
+                tile(pane, index: index)
+            }
+        }
+        .padding(.top, 10)
+        .padding(.bottom, 8)
+        .frame(maxWidth: .infinity)
+        .background(alignment: .top) {
+            ZStack(alignment: .top) {
+                (colorScheme == .dark ? Color(hex: 0x0C0B14).opacity(0.85) : Color.white.opacity(0.65))
+                Rectangle()
+                    .fill(colorScheme == .dark ? Color.white.opacity(0.14) : Color.black.opacity(0.08))
+                    .frame(height: 1)
+            }
+        }
+    }
+
+    private func tile(_ pane: SettingsPane, index: Int) -> some View {
+        let selected = navigation.pane == pane
+        let hovered = navigation.hovered == pane
+        let light = index < 3
+        return Button {
+            navigation.pane = pane
+        } label: {
+            VStack(spacing: 5) {
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .fill(Color(hex: Self.tiles[index]))
+                    .frame(width: 44, height: 44)
+                    .overlay {
+                        Image(systemName: pane.symbol)
+                            .font(.system(size: 19, weight: .semibold))
+                            .foregroundStyle(light ? Color(hex: 0x4C3FA0) : .white)
+                    }
+                    .shadow(color: .black.opacity(selected ? 0.25 : 0.12), radius: selected ? 4 : 2, y: 1)
+                    .scaleEffect(hovered ? 1.08 : 1)
+                Circle()
+                    .fill(MaxTheme.accent)
+                    .frame(width: 5, height: 5)
+                    .opacity(selected ? 1 : 0)
+            }
+            .overlay(alignment: .top) {
+                if hovered {
+                    Text(pane.title)
+                        .font(.caption.weight(.medium))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(.regularMaterial, in: Capsule())
+                        .fixedSize()
+                        .offset(y: -28)
+                        .allowsHitTesting(false)
+                }
+            }
+            .animation(.easeOut(duration: 0.12), value: hovered)
+        }
+        .buttonStyle(.plain)
+        .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
+        .onHover { inside in
+            if inside { navigation.hovered = pane } else if navigation.hovered == pane { navigation.hovered = nil }
+        }
+        .accessibilityLabel(pane.title)
     }
 }
 
@@ -91,7 +200,6 @@ struct GeneralPane: View {
             }
         }
         .themedForm()
-        .frame(height: 440)
         .onAppear { loginItem.refresh() }
         .alert("Launch at Login", isPresented: Binding(
             get: { loginItem.message != nil },
@@ -218,7 +326,6 @@ struct DockPane: View {
             }
         }
         .themedForm()
-        .frame(height: 720)
         .onAppear { pinner.refresh() }
     }
 
@@ -300,7 +407,6 @@ struct AppearancePane: View {
             }
         }
         .themedForm()
-        .frame(height: 640)
     }
 
     private var tintColor: Binding<Color> {
@@ -388,7 +494,6 @@ struct WindowsPane: View {
             }
         }
         .themedForm()
-        .frame(height: 480)
         .alert("Relaunch \(windowCorners.pendingRelaunch.count) Apps?", isPresented: Binding(
             get: { !windowCorners.pendingRelaunch.isEmpty },
             set: { if !$0 { windowCorners.cancelRelaunch() } }
@@ -439,9 +544,7 @@ struct AboutPane: View {
             }
             .padding(.top, 6)
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 320)
-        .background(ThemeBackground())
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

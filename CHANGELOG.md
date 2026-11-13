@@ -10,12 +10,13 @@ A rewrite for macOS 26 and Liquid Glass.
 - **Live details.** Launch bounces, today's date on Calendar, and a full Trash (with Full Disk
   Access). Running dots, badges, and bounces can each be turned off.
 - **Size.** Dock size (resizes the Dock itself), icon size, and extra height with the icons centered.
-- **Dock Items.** Rearrange, add, and remove the Dock's apps, folders, and spacers from Settings, with a
-  backup of the original Dock. Profiles save arrangements to switch between from the menu bar.
+- **Dock profiles.** Save the Dock's arrangement and switch between profiles from Settings or the menu
+  bar; add spacers; restore the original Dock from a backup.
 - **Keep the Dock on one display.**
 - **Window corners.** Set every app's window corner radius, down to square, with per-app exceptions.
 - **Looks.** Liquid Glass, Clear Glass, Blur, or Solid, with color, opacity, and corner radius.
-- **Settings** redesigned with a tab per area, a live preview, and light and dark themes.
+- **Settings** redesigned: a 4:3 window with a dock of sections along the bottom, a live preview, and
+  light and dark themes after the app icon.
 - Follows the Dock across displays and when it auto-hides; ⌃⌥⌘M toggles the bar; launch at login.
 - New app icon and menu bar icon.
 - Settings from 1.0 migrate on first launch.

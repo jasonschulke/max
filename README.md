@@ -11,7 +11,7 @@ every window.
 
 Requires macOS 26 or later.
 
-<p align="center"><img src="docs/images/settings-dock.png" width="440" alt="Max's Dock settings"></p>
+<p align="center"><img src="docs/images/settings-dock.png" width="600" alt="Max's Dock settings"></p>
 
 ## Features
 
@@ -24,8 +24,8 @@ Requires macOS 26 or later.
 - **Size.** Resize the Dock itself, scale the icons Max draws, or make the bar taller with the icons
   kept centered.
 - **Look.** Liquid Glass, Clear Glass, Blur, or Solid, with your own color, opacity, and corner radius.
-- **Dock editor and profiles.** Rearrange, add, and remove apps, folders, and spacers, then save. Save
-  arrangements as profiles (say, Work and Home) and switch from the menu bar.
+- **Dock profiles.** Save the Dock's arrangement as a profile (say, Work and Home) and switch from the
+  menu bar. Add spacers, and restore your original Dock anytime.
 - **Keep the Dock on one display.** Stop the Dock from jumping to whichever display you happen to
   push the pointer against.
 - **Window corners.** Set the corner radius of every app's windows, down to square, with per-app
@@ -60,18 +60,24 @@ Max makes no network connections and collects nothing. Its settings stay in
 
 ## Settings
 
-| Tab | What's there |
+Settings has a dock of its own along the bottom: a tile per section (⌘1–⌘6), in light or dark.
+
+| Section | What's there |
 |---|---|
 | General | Show the bar, launch at login, Settings appearance (System, Light, Dark), animations, the ⌃⌥⌘M shortcut |
 | Dock | Draw over the Dock; Dock size, icon size, and extra height; running indicators, badges, launch bounces, and the full Trash; which display the Dock stays on; auto-hide |
 | Appearance | A live preview; Liquid Glass, Clear Glass, Blur, or Solid; opacity, corner radius, and color |
-| Dock Items | A miniature of the whole Dock above its items. Drag to rearrange, add, remove, and save. Profiles. The first save keeps a backup of your original Dock. |
+| Profiles | Save the Dock as a profile, then use, rename, or delete it; add spacers; restore the original Dock |
 | Windows | Window corner radius, down to square, with per-app exceptions; relaunch apps to apply |
 
+Rearranging happens in the Dock itself: drag icons to reorder, off the Dock to remove, or onto it to add.
+While you drag, Max steps aside so you can see the Dock's own feedback.
+
 <p align="center">
-  <img src="docs/images/settings-appearance.png" width="400" alt="Appearance settings">
-  <img src="docs/images/settings-windows.png" width="400" alt="Window corner settings">
+  <img src="docs/images/settings-appearance-dark.png" width="400" alt="Appearance settings in dark mode">
+  <img src="docs/images/settings-profiles-dark.png" width="400" alt="Dock profiles in dark mode">
 </p>
+<p align="center"><img src="docs/images/settings-windows.png" width="400" alt="Window corner settings"></p>
 
 ## Good to know
 

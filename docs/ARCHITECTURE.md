@@ -39,9 +39,10 @@ across the bar. Its window stays click-through, so the Dock gets every click, ho
 
 ## Changing the Dock
 
-- **Dock items.** The editor rewrites `persistent-apps` and `persistent-others` in `com.apple.dock`,
-  keeping the Dock's own entries intact, then restarts the Dock (`killall Dock`), as `dockutil` does.
-  The first write keeps a backup; profiles are saved copies of both lists.
+- **Profiles and spacers.** A profile is a saved copy of `persistent-apps` and `persistent-others` in
+  `com.apple.dock`, the Dock's own entries kept intact. Using one, or adding a spacer, writes the lists
+  back and restarts the Dock (`killall Dock`), as `dockutil` does. The first write keeps a backup of the
+  original Dock.
 - **Dock size.** Set live through `CoreDockSetTileSize`, the private call System Settings uses, looked up
   at run time so the control disappears if a macOS update removes it.
 - **Keeping the Dock on a display.** macOS moves the Dock to whichever display's Dock edge the pointer is
@@ -69,10 +70,10 @@ on first launch.
 Max/
 ├── App/        MaxApp (menu bar extra + Settings scene), AppDelegate
 ├── Models/     Pure, tested: OverlayConfiguration, DockGeometry, DockSkin, DockPinning, WindowCornerRadius, RGBAColor
-├── Services/   SettingsStore, DockObserver, DockSkinTracker, DockEditor, DockSize, DockPinner, TrashWatcher,
+├── Services/   SettingsStore, DockObserver, DockSkinTracker, DockProfiles, DockSize, DockPinner, TrashWatcher,
 │               WindowCornerOverride, DockRevealTracker, GlobalHotKey, LaunchAtLogin
 ├── Overlay/    OverlayWindow, OverlayBackdropView, OverlayController, DockSkinView
-├── Settings/   SettingsView, DockEditorView
+├── Settings/   SettingsView (with its section dock), DockProfilesView
 └── Resources/  Info.plist, Assets.xcassets, Max.icns
 Tests/          Model tests with a small runner (no XCTest needed)
 Tools/          make-icon.swift draws the app icon; make-signing-identity.sh creates a local signing certificate
