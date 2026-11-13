@@ -74,7 +74,7 @@
 		2F3A6B1E78F896718625FF06 = {
 			isa = PBXGroup;
 			children = (
-				7F43D4268A90598356D6BE99 /* Max.app */,
+				7F43D4268A90598356D6BE99 /* Dock Max.app */,
 				79E4B8CFCFE334D219DE9FCE /* MaxTests */
 			);
 			name = Products;
@@ -251,8 +251,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 2.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = jasonschulke.Max;
-				PRODUCT_NAME = Max;
+				PRODUCT_BUNDLE_IDENTIFIER = co.prepwork.dockmax;
+				PRODUCT_NAME = "Dock Max";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
@@ -295,7 +295,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7F43D4268A90598356D6BE99 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Max.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7F43D4268A90598356D6BE99 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Dock Max.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		83A6D55902C642EB1861F392 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorBridging.swift; sourceTree = "<group>"; };
 		83E7367A44A62C3CE106A89B = {isa = PBXBuildFile; fileRef = C4C14F001EF265BF437207E6 /* LaunchAtLogin.swift */; };
 		8509DD790DE7D4A444D69168 = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -344,7 +344,7 @@
 			);
 			name = Max;
 			productName = Max;
-			productReference = 7F43D4268A90598356D6BE99 /* Max.app */;
+			productReference = 7F43D4268A90598356D6BE99 /* Dock Max.app */;
 			productType = "com.apple.product-type.application";
 		};
 		A75448CF9692BB9B1B9E4DDC = {isa = PBXBuildFile; fileRef = 32C53B55D15EEAF8590BEBA8 /* AppDelegate.swift */; };
@@ -426,8 +426,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 2.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = jasonschulke.Max;
-				PRODUCT_NAME = Max;
+				PRODUCT_BUNDLE_IDENTIFIER = co.prepwork.dockmax;
+				PRODUCT_NAME = "Dock Max";
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 			};

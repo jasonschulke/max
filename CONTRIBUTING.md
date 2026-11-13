@@ -4,7 +4,7 @@ Thanks for helping out. Bug reports, fixes, and ideas are all welcome.
 
 ## Reporting a bug
 
-Max leans on how macOS lays out the Dock, so the details of your setup matter. Please include your macOS
+Dock Max leans on how macOS lays out the Dock, so the details of your setup matter. Please include your macOS
 version, your displays and their arrangement, your Dock settings (position, size, auto-hide,
 magnification), and whether *Draw over the Dock* is on. A screenshot helps a lot.
 
@@ -17,7 +17,7 @@ make test     # model tests
 make run      # build and launch
 ```
 
-Run `Tools/make-signing-identity.sh` once so rebuilds keep Max's Accessibility access.
+Run `Tools/make-signing-identity.sh` once so rebuilds keep Dock Max's Accessibility access.
 
 ## Code
 
@@ -30,5 +30,5 @@ Run `Tools/make-signing-identity.sh` once so rebuilds keep Max's Accessibility a
 
 ## License
 
-Contributions are released under the MIT license, like the rest of the code. The Max name and icon
+Contributions are released under the MIT license, like the rest of the code. The Dock Max name and icon
 stay reserved; see the README.

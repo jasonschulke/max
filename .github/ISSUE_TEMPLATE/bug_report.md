@@ -10,7 +10,7 @@ labels: bug
 
 **Your setup**
 - macOS version:
-- Max version (Settings → About):
+- Dock Max version (Settings → About):
 - Displays and how they're arranged:
 - Dock position, size, auto-hide, and magnification:
 - *Draw over the Dock*: on / off

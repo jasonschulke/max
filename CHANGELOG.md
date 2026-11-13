@@ -2,9 +2,9 @@
 
 ## 2.0.0 — unreleased
 
-A rewrite for macOS 26 and Liquid Glass.
+A rewrite for macOS 26 and Liquid Glass, and a new name: Max is now Dock Max.
 
-- **Draw over the Dock.** Max covers Apple's Dock with a full-width bar and draws the Dock's icons,
+- **Draw over the Dock.** Dock Max covers Apple's Dock with a full-width bar and draws the Dock's icons,
   running indicators, and badges where the Dock draws them; the Dock still handles every click, menu,
   label, and drag. Needs Accessibility access; without it the bar sits behind the Dock.
 - **Live details.** Launch bounces, today's date on Calendar, and a full Trash (with Full Disk
@@ -21,7 +21,7 @@ A rewrite for macOS 26 and Liquid Glass.
   light and dark themes after the app icon.
 - Follows the Dock across displays and when it auto-hides; ⌃⌥⌘M toggles the bar; launch at login.
 - New app icon and menu bar icon.
-- Settings from 1.0 migrate on first launch.
+- Settings from 1.0, and from builds under the old name, carry over on first launch.
 
 ## 1.0.0
 

@@ -172,7 +172,7 @@ struct GeneralPane: View {
                         .resizable()
                         .frame(width: 52, height: 52)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Max")
+                        Text("Dock Max")
                             .font(.title2.weight(.semibold))
                         Text(status)
                             .foregroundStyle(.secondary)
@@ -247,7 +247,7 @@ struct DockPane: View {
                     }
                 }
             } footer: {
-                Text("Max covers Apple's Dock and draws its icons exactly where the Dock does, so no floating pill shows. The Dock still handles clicks, menus, labels, and drags. Max uses Accessibility access to read where the Dock draws its items, and to keep the Dock on the display you choose below.")
+                Text("Dock Max covers Apple's Dock and draws its icons exactly where the Dock does, so no floating pill shows. The Dock still handles clicks, menus, labels, and drags. Dock Max uses Accessibility access to read where the Dock draws its items, and to keep the Dock on the display you choose below.")
             }
 
             Section {
@@ -279,7 +279,7 @@ struct DockPane: View {
                 Text("Size")
             } footer: {
                 Text(skins
-                     ? "Dock size resizes the Dock itself, and windows always stop above it. A full Dock is already shrunk to fit the screen, so it can only get smaller. Icon size scales the icons Max draws without changing the Dock's spacing. Extra height makes the bar taller than the Dock with the icons kept centered; windows can extend under the extra height."
+                     ? "Dock size resizes the Dock itself, and windows always stop above it. A full Dock is already shrunk to fit the screen, so it can only get smaller. Icon size scales the icons Dock Max draws without changing the Dock's spacing. Extra height makes the bar taller than the Dock with the icons kept centered; windows can extend under the extra height."
                      : "Dock size resizes the Dock itself. Match Dock sizes the bar to the strip macOS reserves for the Dock.")
             }
 
@@ -300,7 +300,7 @@ struct DockPane: View {
             } header: {
                 Text("Icons")
             } footer: {
-                Text("Max draws these while it draws over the Dock. It also shows today's date on Calendar. Showing a full Trash needs Full Disk Access, because macOS protects the Trash folder.")
+                Text("Dock Max draws these while it draws over the Dock. It also shows today's date on Calendar. Showing a full Trash needs Full Disk Access, because macOS protects the Trash folder.")
             }
             .disabled(!skins)
 
@@ -313,7 +313,7 @@ struct DockPane: View {
             } header: {
                 Text("Screen Care")
             } footer: {
-                Text("A bar that never moves can leave a ghost on LCDs and burn in on OLEDs. Max moves its icons a pixel every few minutes, too little to notice, and can darken the bar while you're away.")
+                Text("A bar that never moves can leave a ghost on LCDs and burn in on OLEDs. Dock Max moves its icons a pixel every few minutes, too little to notice, and can darken the bar while you're away.")
             }
 
             Section {
@@ -355,9 +355,9 @@ struct DockPane: View {
             return "Keeping the Dock in place needs Accessibility access."
         }
         if pinner.dockDisplay?.id != pinned {
-            return "Push the pointer against the bottom of the chosen display once to move the Dock there. Max then keeps it there by stopping the pointer just short of the other displays' Dock edges."
+            return "Push the pointer against the bottom of the chosen display once to move the Dock there. Dock Max then keeps it there by stopping the pointer just short of the other displays' Dock edges."
         }
-        return "Max keeps the Dock here by stopping the pointer just short of the other displays' Dock edges, where pushing would move it."
+        return "Dock Max keeps the Dock here by stopping the pointer just short of the other displays' Dock edges, where pushing would move it."
     }
 
     private func setInteracting(_ interacting: Bool) {
@@ -513,7 +513,7 @@ struct WindowsPane: View {
             Button("Relaunch", action: windowCorners.confirmRelaunch)
             Button("Cancel", role: .cancel, action: windowCorners.cancelRelaunch)
         } message: {
-            Text("Max will quit and reopen \(windowCorners.pendingRelaunch.map(\.name).formatted()). Apps with unsaved changes ask you to save first, and quitting Terminal ends anything running in it.")
+            Text("Dock Max will quit and reopen \(windowCorners.pendingRelaunch.map(\.name).formatted()). Apps with unsaved changes ask you to save first, and quitting Terminal ends anything running in it.")
         }
     }
 
@@ -544,7 +544,7 @@ struct AboutPane: View {
             Image(nsImage: NSApp.applicationIconImage)
                 .resizable()
                 .frame(width: 112, height: 112)
-            Text("Max")
+            Text("Dock Max")
                 .font(.largeTitle.weight(.semibold))
             Text(version)
                 .foregroundStyle(.secondary)
@@ -654,7 +654,7 @@ final class LoginItemSettings {
         do {
             try LaunchAtLogin.setEnabled(enabled)
             if enabled, LaunchAtLogin.requiresApproval {
-                message = "macOS needs you to approve Max under System Settings › General › Login Items."
+                message = "macOS needs you to approve Dock Max under System Settings › General › Login Items."
             }
         } catch {
             isEnabled = LaunchAtLogin.isEnabled
