@@ -70,7 +70,7 @@ struct SettingsView: View {
         case .appearance: AppearancePane(store: store)
         case .profiles: ProfilesPane(profiles: profiles)
         case .windows: WindowsPane(windowCorners: windowCorners)
-        case .about: AboutPane(store: store)
+        case .about: AboutPane()
         }
     }
 
@@ -185,17 +185,6 @@ struct GeneralPane: View {
                 Toggle("Show the bar", isOn: $store.configuration.isEnabled)
                 Toggle("Launch at login", isOn: Binding(get: { loginItem.isEnabled }, set: { loginItem.setEnabled($0) }))
             }
-            Section {
-                Toggle("Shift icons slightly over time", isOn: $store.configuration.driftsIcons)
-                Toggle("Dim the bar when idle", isOn: $store.configuration.dimsWhenIdle)
-                SettingSlider("After", value: $store.configuration.idleDimMinutes, in: OverlayConfiguration.idleDimMinutesRange,
-                              label: { "\(Int($0.rounded())) min" })
-                    .disabled(!store.configuration.dimsWhenIdle)
-            } header: {
-                Text("Screen Care")
-            } footer: {
-                Text("A bar that never moves can leave a ghost on LCDs and burn in on OLEDs. Max moves its icons a pixel every few minutes, too little to notice, and can darken the bar while you're away.")
-            }
             Section("Behavior") {
                 Picker("Settings appearance", selection: $store.configuration.settingsAppearance) {
                     ForEach(OverlayConfiguration.SettingsAppearance.allCases) { Text($0.title).tag($0) }
@@ -203,6 +192,11 @@ struct GeneralPane: View {
                 .pickerStyle(.segmented)
                 Toggle("Animate changes", isOn: $store.configuration.animationsEnabled)
                 Toggle("Toggle the bar with \(GlobalHotKey.Shortcut.toggleOverlay.display)", isOn: $store.configuration.globalShortcutEnabled)
+            }
+            Section {
+                LabeledContent("All settings") {
+                    Button("Reset to Defaults") { store.resetToDefaults() }
+                }
             }
         }
         .themedForm()
@@ -309,6 +303,18 @@ struct DockPane: View {
                 Text("Max draws these while it draws over the Dock. It also shows today's date on Calendar. Showing a full Trash needs Full Disk Access, because macOS protects the Trash folder.")
             }
             .disabled(!skins)
+
+            Section {
+                Toggle("Shift icons slightly over time", isOn: config.driftsIcons)
+                Toggle("Dim the bar when idle", isOn: config.dimsWhenIdle)
+                SettingSlider("After", value: config.idleDimMinutes, in: OverlayConfiguration.idleDimMinutesRange,
+                              label: { "\(Int($0.rounded())) min" })
+                    .disabled(!store.configuration.dimsWhenIdle)
+            } header: {
+                Text("Screen Care")
+            } footer: {
+                Text("A bar that never moves can leave a ghost on LCDs and burn in on OLEDs. Max moves its icons a pixel every few minutes, too little to notice, and can darken the bar while you're away.")
+            }
 
             Section {
                 Picker("Keep the Dock on", selection: config.pinnedDisplay) {
@@ -526,8 +532,6 @@ struct WindowsPane: View {
 }
 
 struct AboutPane: View {
-    let store: SettingsStore
-
     private var version: String {
         let info = Bundle.main.infoDictionary
         let short = info?["CFBundleShortVersionString"] as? String ?? "–"
@@ -551,9 +555,6 @@ struct AboutPane: View {
                 Link("Project Page", destination: URL(string: "https://jasonschulke.com/projects/max")!)
             }
             .padding(.top, 6)
-            Button("Reset All Settings to Defaults") { store.resetToDefaults() }
-                .controlSize(.small)
-                .padding(.top, 24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

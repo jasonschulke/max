@@ -66,8 +66,8 @@ Settings has a dock of its own along the bottom: a tile per section (⌘1–⌘6
 
 | Section | What's there |
 |---|---|
-| General | Show the bar, launch at login, Settings appearance (System, Light, Dark), animations, the ⌃⌥⌘M shortcut; screen care (icon drift, dim when idle) |
-| Dock | Draw over the Dock; Dock size, icon size, and extra height; running indicators, badges, launch bounces, and the full Trash; which display the Dock stays on; auto-hide |
+| General | Show the bar, launch at login, Settings appearance (System, Light, Dark), animations, the ⌃⌥⌘M shortcut |
+| Dock | Draw over the Dock; Dock size, icon size, and extra height; running indicators, badges, launch bounces, and the full Trash; screen care (icon drift, dim when idle); which display the Dock stays on; auto-hide |
 | Appearance | A live preview; Liquid Glass, Clear Glass, Blur, or Solid; opacity, corner radius, and color |
 | Profiles | Save the Dock as a profile, then use, rename, or delete it; add spacers; restore the original Dock |
 | Windows | Window corner radius, down to square, with per-app exceptions; relaunch apps to apply |
