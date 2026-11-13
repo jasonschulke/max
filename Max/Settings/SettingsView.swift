@@ -70,7 +70,7 @@ struct SettingsView: View {
         case .appearance: AppearancePane(store: store)
         case .profiles: ProfilesPane(profiles: profiles)
         case .windows: WindowsPane(windowCorners: windowCorners)
-        case .about: AboutPane()
+        case .about: AboutPane(store: store)
         }
     }
 
@@ -185,14 +185,6 @@ struct GeneralPane: View {
                 Toggle("Show the bar", isOn: $store.configuration.isEnabled)
                 Toggle("Launch at login", isOn: Binding(get: { loginItem.isEnabled }, set: { loginItem.setEnabled($0) }))
             }
-            Section("Behavior") {
-                Picker("Settings appearance", selection: $store.configuration.settingsAppearance) {
-                    ForEach(OverlayConfiguration.SettingsAppearance.allCases) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                Toggle("Animate changes", isOn: $store.configuration.animationsEnabled)
-                Toggle("Toggle the bar with \(GlobalHotKey.Shortcut.toggleOverlay.display)", isOn: $store.configuration.globalShortcutEnabled)
-            }
             Section {
                 Toggle("Shift icons slightly over time", isOn: $store.configuration.driftsIcons)
                 Toggle("Dim the bar when idle", isOn: $store.configuration.dimsWhenIdle)
@@ -202,12 +194,15 @@ struct GeneralPane: View {
             } header: {
                 Text("Screen Care")
             } footer: {
-                Text("A bar that never moves can leave a faint ghost on LCDs (and burn in on OLEDs). Max moves its icons by a pixel every few minutes, too little to notice, and can darken the bar while you're away.")
+                Text("A bar that never moves can leave a ghost on LCDs and burn in on OLEDs. Max moves its icons a pixel every few minutes, too little to notice, and can darken the bar while you're away.")
             }
-            Section {
-                LabeledContent("All settings") {
-                    Button("Reset to Defaults") { store.resetToDefaults() }
+            Section("Behavior") {
+                Picker("Settings appearance", selection: $store.configuration.settingsAppearance) {
+                    ForEach(OverlayConfiguration.SettingsAppearance.allCases) { Text($0.title).tag($0) }
                 }
+                .pickerStyle(.segmented)
+                Toggle("Animate changes", isOn: $store.configuration.animationsEnabled)
+                Toggle("Toggle the bar with \(GlobalHotKey.Shortcut.toggleOverlay.display)", isOn: $store.configuration.globalShortcutEnabled)
             }
         }
         .themedForm()
@@ -531,6 +526,8 @@ struct WindowsPane: View {
 }
 
 struct AboutPane: View {
+    let store: SettingsStore
+
     private var version: String {
         let info = Bundle.main.infoDictionary
         let short = info?["CFBundleShortVersionString"] as? String ?? "–"
@@ -554,6 +551,9 @@ struct AboutPane: View {
                 Link("Project Page", destination: URL(string: "https://jasonschulke.com/projects/max")!)
             }
             .padding(.top, 6)
+            Button("Reset All Settings to Defaults") { store.resetToDefaults() }
+                .controlSize(.small)
+                .padding(.top, 24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
