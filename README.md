@@ -155,4 +155,7 @@ Makefile        Command Line Tools build
 
 ## License
 
-MIT — see `LICENSE`.
+The code is MIT licensed — see `LICENSE`.
+
+The Max name and app icon are not covered by that license. Forks and redistributed builds are welcome
+under MIT, but please give them a different name and icon so they aren't mistaken for Max.
