@@ -34,6 +34,7 @@ let overlayConfigurationTests: [TestCase] = [
         config.skinsDock = true
         config.iconScale = 0.8
         config.showsIndicators = false
+        config.marksFrontmostApp = true
         config.showsBadges = false
         config.bouncesOnLaunch = false
         config.pinnedDisplay = "4A2C-UUID"

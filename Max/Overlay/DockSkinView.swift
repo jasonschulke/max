@@ -7,6 +7,7 @@ final class DockSkinView: NSView {
     struct Style: Equatable {
         var iconScale = 1.0
         var showsIndicators = true
+        var marksFrontmost = false
         var showsBadges = true
         var bounces = true
         var trashIsFull = false
@@ -100,7 +101,7 @@ final class DockSkinView: NSView {
             }
         }
         if style.showsIndicators, item.isRunning {
-            drawIndicator(at: DockSkin.indicatorCenter(for: icon, orientation: orientation), active: item.isActive)
+            drawIndicator(at: DockSkin.indicatorCenter(for: icon, orientation: orientation), active: style.marksFrontmost && item.isActive)
         }
     }
 
@@ -160,7 +161,7 @@ final class DockSkinView: NSView {
         return image
     }
 
-    /// A dot under running apps, stretched into a short bar under the frontmost one.
+    /// A dot under running apps; stretched into a short bar under the frontmost one when that is turned on.
     private func drawIndicator(at center: NSPoint, active: Bool) {
         let dot: CGFloat = 4
         let long: CGFloat = active ? 12 : dot

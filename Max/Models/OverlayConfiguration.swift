@@ -124,6 +124,8 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     var skinsDock = false
     /// Dots under running apps, drawn over the Dock.
     var showsIndicators = true
+    /// Stretch the frontmost app's dot into a short bar. Off by default, like the Dock's plain dots.
+    var marksFrontmostApp = false
     /// Notification badges on icons, drawn over the Dock.
     var showsBadges = true
     /// Icons hop while their app launches, as the Dock's do.
@@ -164,7 +166,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     // MARK: Codable (missing or unknown values fall back to defaults)
 
     private enum CodingKeys: String, CodingKey {
-        case isEnabled, skinsDock, showsIndicators, showsBadges, bouncesOnLaunch, iconScale, pinnedDisplay, style, blurMaterial, opacity, heightMode, heightAdjustment, customHeight
+        case isEnabled, skinsDock, showsIndicators, marksFrontmostApp, showsBadges, bouncesOnLaunch, iconScale, pinnedDisplay, style, blurMaterial, opacity, heightMode, heightAdjustment, customHeight
         case cornerRadius, tint, animationsEnabled, mirrorsDockAutoHide, globalShortcutEnabled, settingsAppearance
     }
 
@@ -174,6 +176,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? defaults.isEnabled
         skinsDock = try container.decodeIfPresent(Bool.self, forKey: .skinsDock) ?? defaults.skinsDock
         showsIndicators = try container.decodeIfPresent(Bool.self, forKey: .showsIndicators) ?? defaults.showsIndicators
+        marksFrontmostApp = try container.decodeIfPresent(Bool.self, forKey: .marksFrontmostApp) ?? defaults.marksFrontmostApp
         showsBadges = try container.decodeIfPresent(Bool.self, forKey: .showsBadges) ?? defaults.showsBadges
         bouncesOnLaunch = try container.decodeIfPresent(Bool.self, forKey: .bouncesOnLaunch) ?? defaults.bouncesOnLaunch
         iconScale = try container.decodeIfPresent(Double.self, forKey: .iconScale) ?? defaults.iconScale

@@ -177,6 +177,8 @@ struct DockPane: View {
 
             Section {
                 Toggle("Running indicators", isOn: config.showsIndicators)
+                Toggle("Mark the frontmost app", isOn: config.marksFrontmostApp)
+                    .disabled(!store.configuration.showsIndicators)
                 Toggle("Badges", isOn: config.showsBadges)
                 Toggle("Bounce while apps open", isOn: config.bouncesOnLaunch)
                 LabeledContent("Full Trash icon") {
@@ -216,7 +218,7 @@ struct DockPane: View {
             }
         }
         .themedForm()
-        .frame(height: 680)
+        .frame(height: 720)
         .onAppear { pinner.refresh() }
     }
 

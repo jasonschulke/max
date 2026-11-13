@@ -108,7 +108,8 @@ final class OverlayController {
         skinView.isHidden = !skins
         if skins {
             let style = DockSkinView.Style(
-                iconScale: config.iconScale, showsIndicators: config.showsIndicators, showsBadges: config.showsBadges,
+                iconScale: config.iconScale, showsIndicators: config.showsIndicators, marksFrontmost: config.marksFrontmostApp,
+                showsBadges: config.showsBadges,
                 bounces: config.bouncesOnLaunch, trashIsFull: snapshot.skin.trashIsFull
             )
             // Only what is really on this display: the Dock can sit on another one, or hidden below its edge.
