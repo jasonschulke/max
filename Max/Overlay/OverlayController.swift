@@ -7,10 +7,13 @@ final class OverlayController {
     private let dockObserver: DockObserver
     private let skinTracker: DockSkinTracker
     private let trash: TrashWatcher
+    private let idle: IdleWatcher
     private let revealTracker = DockRevealTracker()
     private let window = OverlayWindow()
     private let backdrop: OverlayBackdropView
     private let skinView: DockSkinView
+    /// Darkens the whole bar while the user is away; opaque, so the Dock beneath never shows through.
+    private let dimView = NSView()
     private var observationTask: Task<Void, Never>?
     private var visibilityGeneration = 0
     private var hasApplied = false
@@ -18,11 +21,12 @@ final class OverlayController {
     private let changeDuration = 0.25
     private let dragFadeDuration = 0.12
 
-    init(store: SettingsStore, dockObserver: DockObserver, skinTracker: DockSkinTracker, trash: TrashWatcher) {
+    init(store: SettingsStore, dockObserver: DockObserver, skinTracker: DockSkinTracker, trash: TrashWatcher, idle: IdleWatcher) {
         self.store = store
         self.dockObserver = dockObserver
         self.skinTracker = skinTracker
         self.trash = trash
+        self.idle = idle
         let content = NSView(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
         // The backdrop is laid out on every change: it fills the bar, not the headroom above it.
         backdrop = OverlayBackdropView(frame: content.bounds)
@@ -30,6 +34,10 @@ final class OverlayController {
         skinView.autoresizingMask = [.width, .height]
         content.addSubview(backdrop)
         content.addSubview(skinView)
+        dimView.wantsLayer = true
+        dimView.layer?.backgroundColor = NSColor.black.cgColor
+        dimView.alphaValue = 0
+        content.addSubview(dimView)
         window.contentView = content
     }
 
@@ -40,6 +48,7 @@ final class OverlayController {
         var screenFrame: CGRect
         var visibleFrame: CGRect
         var isRevealed: Bool
+        var isIdle: Bool
         var skin: Skin
     }
 
@@ -54,7 +63,7 @@ final class OverlayController {
 
     func start() {
         observationTask?.cancel()
-        observationTask = Task { [store, dockObserver, skinTracker, trash, revealTracker] in
+        observationTask = Task { [store, dockObserver, skinTracker, trash, idle, revealTracker] in
             // Emits the current snapshot first, then one per change (coalesced per run-loop turn).
             let snapshots = Observations {
                 let configuration = store.configuration
@@ -65,6 +74,7 @@ final class OverlayController {
                     screenFrame: dockObserver.screenFrame,
                     visibleFrame: dockObserver.visibleFrame,
                     isRevealed: revealTracker.isRevealed,
+                    isIdle: configuration.dimsWhenIdle && idle.isIdle,
                     skin: configuration.skinsDock
                         ? Skin(items: skinTracker.items, canRead: skinTracker.isTrusted, isDragging: skinTracker.isDragging,
                                trashIsFull: trash.isFull, dockFrame: skinTracker.dockFrame)
@@ -100,6 +110,9 @@ final class OverlayController {
         setFrame(windowFrame, animated: animated)
         let barRect = frame.offsetBy(dx: -windowFrame.minX, dy: -windowFrame.minY)
         backdrop.frame = barRect
+        dimView.frame = barRect
+        idle.configure(enabled: config.dimsWhenIdle, after: config.idleDimMinutes * 60)
+        setDimmed(snapshot.isIdle)
 
         if config.skinsDock { skinTracker.start() } else { skinTracker.stop() }
         skinTracker.dockRegion = frame
@@ -110,7 +123,7 @@ final class OverlayController {
             let style = DockSkinView.Style(
                 iconScale: config.iconScale, showsIndicators: config.showsIndicators, marksFrontmost: config.marksFrontmostApp,
                 showsBadges: config.showsBadges,
-                bounces: config.bouncesOnLaunch, trashIsFull: snapshot.skin.trashIsFull
+                bounces: config.bouncesOnLaunch, trashIsFull: snapshot.skin.trashIsFull, drifts: config.driftsIcons
             )
             // Only what is really on this display: the Dock can sit on another one, or hidden below its edge.
             let items = snapshot.skin.items.filter { $0.frame.intersects(snapshot.screenFrame) }
@@ -141,6 +154,16 @@ final class OverlayController {
         }
         let duration = snapshot.skin.isDragging ? dragFadeDuration : snapshot.dock.autoHides ? snapshot.dock.autoHideDuration : changeDuration
         setVisible(visible, opacity: skins ? 1 : config.opacity, animated: animated, duration: duration)
+    }
+
+    /// Fades the bar down slowly when the user goes idle, and back up quickly when they return.
+    private func setDimmed(_ dimmed: Bool) {
+        let target: CGFloat = dimmed ? 0.45 : 0
+        guard dimView.alphaValue != target else { return }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = dimmed ? 1.5 : 0.2
+            dimView.animator().alphaValue = target
+        }
     }
 
     private func setFrame(_ frame: CGRect, animated: Bool) {

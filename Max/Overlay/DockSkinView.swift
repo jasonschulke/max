@@ -11,6 +11,8 @@ final class DockSkinView: NSView {
         var showsBadges = true
         var bounces = true
         var trashIsFull = false
+        /// Screen care: shift the drawing by a pixel every few minutes.
+        var drifts = true
     }
 
     private var items: [SkinItem] = []
@@ -24,6 +26,8 @@ final class DockSkinView: NSView {
     /// Icons hopping because their app is launching: when the hops began, and when the last one lands.
     private var bounces: [URL: (start: Date, end: Date?)] = [:]
     private var bounceTimer: Timer?
+    private var driftTimer: Timer?
+    private var driftOffset = CGPoint.zero
     private let hopDuration = 0.65
     /// How high an icon hops, as a fraction of its size.
     private let hopHeight = 0.5
@@ -44,6 +48,7 @@ final class DockSkinView: NSView {
         self.style = style
         self.barRect = barRect
         updateBounces()
+        updateDrift()
         needsDisplay = true
     }
 
@@ -67,6 +72,11 @@ final class DockSkinView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         guard let window else { return }
         NSGraphicsContext.current?.imageInterpolation = .high
+        if driftOffset != .zero {
+            let transform = NSAffineTransform()
+            transform.translateX(by: driftOffset.x, yBy: driftOffset.y)
+            transform.concat()
+        }
         let now = Date()
         for item in items where item.isDrawn {
             // Items come in screen coordinates; the window may have moved since they were read.
@@ -184,6 +194,34 @@ final class DockSkinView: NSView {
         NSColor.systemRed.setFill()
         NSBezierPath(roundedRect: badge, xRadius: height / 2, yRadius: height / 2).fill()
         label.draw(at: NSPoint(x: badge.midX - textSize.width / 2, y: badge.midY - textSize.height / 2))
+    }
+
+    // MARK: Drift
+
+    /// Moves the drawing along the drift path, checking now and then for the next step.
+    private func updateDrift() {
+        guard style.drifts else {
+            driftTimer?.invalidate()
+            driftTimer = nil
+            if driftOffset != .zero {
+                driftOffset = .zero
+                needsDisplay = true
+            }
+            return
+        }
+        stepDrift()
+        if driftTimer == nil {
+            driftTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated { self?.stepDrift() }
+            }
+        }
+    }
+
+    private func stepDrift() {
+        let offset = DockSkin.driftOffset(at: Date())
+        guard offset != driftOffset else { return }
+        driftOffset = offset
+        needsDisplay = true
     }
 
     // MARK: Bouncing

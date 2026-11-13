@@ -194,6 +194,17 @@ struct GeneralPane: View {
                 Toggle("Toggle the bar with \(GlobalHotKey.Shortcut.toggleOverlay.display)", isOn: $store.configuration.globalShortcutEnabled)
             }
             Section {
+                Toggle("Shift icons slightly over time", isOn: $store.configuration.driftsIcons)
+                Toggle("Dim the bar when idle", isOn: $store.configuration.dimsWhenIdle)
+                SettingSlider("After", value: $store.configuration.idleDimMinutes, in: OverlayConfiguration.idleDimMinutesRange,
+                              label: { "\(Int($0.rounded())) min" })
+                    .disabled(!store.configuration.dimsWhenIdle)
+            } header: {
+                Text("Screen Care")
+            } footer: {
+                Text("A bar that never moves can leave a faint ghost on LCDs (and burn in on OLEDs). Max moves its icons by a pixel every few minutes, too little to notice, and can darken the bar while you're away.")
+            }
+            Section {
                 LabeledContent("All settings") {
                     Button("Reset to Defaults") { store.resetToDefaults() }
                 }

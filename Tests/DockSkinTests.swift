@@ -53,6 +53,17 @@ let dockSkinTests: [TestCase] = [
         expectClose(Double(DockSkin.indicatorCenter(for: icon, orientation: .left).x), 10 + 40 * DockSkin.iconPadding - 4)
         expectClose(Double(DockSkin.indicatorCenter(for: icon, orientation: .right).x), 50 - 40 * DockSkin.iconPadding + 4)
     },
+    TestCase(name: "the drift moves one step at a time around a small square and repeats") {
+        let start = Date(timeIntervalSinceReferenceDate: 0)
+        expectEqual(DockSkin.driftOffset(at: start), .zero)
+        expectEqual(DockSkin.driftOffset(at: start.addingTimeInterval(DockSkin.driftStep - 1)), .zero)
+        expectEqual(DockSkin.driftOffset(at: start.addingTimeInterval(DockSkin.driftStep)), CGPoint(x: 1, y: 0))
+        let cycle = DockSkin.driftStep * Double(DockSkin.driftPath.count)
+        expectEqual(DockSkin.driftOffset(at: start.addingTimeInterval(cycle)), .zero)
+        expectEqual(DockSkin.driftOffset(at: start.addingTimeInterval(-DockSkin.driftStep)), CGPoint(x: 0, y: -1))
+        let neighbors = zip(DockSkin.driftPath, DockSkin.driftPath.dropFirst() + [DockSkin.driftPath[0]])
+        expect(neighbors.allSatisfy { abs($0.x - $1.x) + abs($0.y - $1.y) <= 2 }, "each step moves at most a pixel each way")
+    },
     TestCase(name: "frames settle to half points") {
         expectEqual(DockSkin.settled(CGRect(x: 25.96, y: 5.1, width: 31.96, height: 43.96)), CGRect(x: 26, y: 5, width: 32, height: 44))
     },

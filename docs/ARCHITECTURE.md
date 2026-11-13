@@ -37,6 +37,13 @@ across the bar. Its window stays click-through, so the Dock gets every click, ho
 - **Icon geometry.** Measured on macOS 26 and 27: the Dock draws an icon image at 96.25% of its slot's
   length, and macOS app icons fill 80.5% of their image.
 
+## Screen care
+
+A bar that never moves holds the same high-contrast edges for hours, which leaves image retention on
+LCDs (and burn-in on OLEDs). Max shifts everything it draws over the Dock around a two-point square, one
+step every three minutes. Dimming darkens the bar with an opaque overlay after the configured idle time,
+read from `CGEventSource.secondsSinceLastEventType` once a second.
+
 ## Changing the Dock
 
 - **Profiles and spacers.** A profile is a saved copy of `persistent-apps` and `persistent-others` in
@@ -70,7 +77,7 @@ on first launch.
 Max/
 ├── App/        MaxApp (menu bar extra + Settings scene), AppDelegate
 ├── Models/     Pure, tested: OverlayConfiguration, DockGeometry, DockSkin, DockPinning, WindowCornerRadius, RGBAColor
-├── Services/   SettingsStore, DockObserver, DockSkinTracker, DockProfiles, DockSize, DockPinner, TrashWatcher,
+├── Services/   SettingsStore, DockObserver, DockSkinTracker, DockProfiles, DockSize, DockPinner, TrashWatcher, IdleWatcher,
 │               WindowCornerOverride, DockRevealTracker, GlobalHotKey, LaunchAtLogin
 ├── Overlay/    OverlayWindow, OverlayBackdropView, OverlayController, DockSkinView
 ├── Settings/   SettingsView (with its section dock), DockProfilesView

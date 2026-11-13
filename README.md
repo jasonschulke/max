@@ -30,6 +30,8 @@ Requires macOS 26 or later.
   push the pointer against.
 - **Window corners.** Set the corner radius of every app's windows, down to square, with per-app
   exceptions.
+- **Screen care.** A bar that never moves can leave a ghost on LCDs. Max shifts its icons by a pixel
+  every few minutes and can dim the bar while you're away.
 - **Menu bar app.** ⌃⌥⌘M toggles the bar from anywhere; Max can launch at login. Settings come in
   light and dark.
 
@@ -64,7 +66,7 @@ Settings has a dock of its own along the bottom: a tile per section (⌘1–⌘6
 
 | Section | What's there |
 |---|---|
-| General | Show the bar, launch at login, Settings appearance (System, Light, Dark), animations, the ⌃⌥⌘M shortcut |
+| General | Show the bar, launch at login, Settings appearance (System, Light, Dark), animations, the ⌃⌥⌘M shortcut; screen care (icon drift, dim when idle) |
 | Dock | Draw over the Dock; Dock size, icon size, and extra height; running indicators, badges, launch bounces, and the full Trash; which display the Dock stays on; auto-hide |
 | Appearance | A live preview; Liquid Glass, Clear Glass, Blur, or Solid; opacity, corner radius, and color |
 | Profiles | Save the Dock as a profile, then use, rename, or delete it; add spacers; restore the original Dock |

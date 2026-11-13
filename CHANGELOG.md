@@ -13,6 +13,8 @@ A rewrite for macOS 26 and Liquid Glass.
 - **Dock profiles.** Save the Dock's arrangement and switch between profiles from Settings or the menu
   bar; add spacers; restore the original Dock from a backup.
 - **Keep the Dock on one display.**
+- **Screen care.** Icons shift by a pixel every few minutes, and the bar can dim when you're idle, to
+  avoid image retention from a bar that never moves.
 - **Window corners.** Set every app's window corner radius, down to square, with per-app exceptions.
 - **Looks.** Liquid Glass, Clear Glass, Blur, or Solid, with color, opacity, and corner radius.
 - **Settings** redesigned: a 4:3 window with a dock of sections along the bottom, a live preview, and

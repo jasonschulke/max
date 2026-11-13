@@ -75,6 +75,20 @@ nonisolated enum DockSkin {
         }
     }
 
+    /// Screen care: the drawing moves around a two-point square, one step every `driftStep` seconds, so no pixel
+    /// holds the same high-contrast edge for hours (which leaves image retention on LCDs and burn-in on OLEDs).
+    static let driftPath: [CGPoint] = [
+        CGPoint(x: 0, y: 0), CGPoint(x: 1, y: 0), CGPoint(x: 1, y: 1), CGPoint(x: 0, y: 1),
+        CGPoint(x: -1, y: 1), CGPoint(x: -1, y: 0), CGPoint(x: -1, y: -1), CGPoint(x: 0, y: -1),
+    ]
+    static let driftStep = 180.0
+
+    /// Where the drawing sits at a given moment.
+    static func driftOffset(at date: Date) -> CGPoint {
+        let step = Int((date.timeIntervalSinceReferenceDate / driftStep).rounded(.down))
+        return driftPath[((step % driftPath.count) + driftPath.count) % driftPath.count]
+    }
+
     /// Rounds frames to half points so sub-pixel jitter between Accessibility reads does not count as a change.
     static func settled(_ frame: CGRect) -> CGRect {
         func half(_ value: CGFloat) -> CGFloat { (value * 2).rounded() / 2 }

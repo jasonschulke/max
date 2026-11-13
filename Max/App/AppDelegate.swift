@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let dockSize = DockSize()
     let pinner = DockPinner()
     let trash = TrashWatcher()
+    let idle = IdleWatcher()
 
     private var overlay: OverlayController?
     private var hotKey: GlobalHotKey?
@@ -19,7 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var pinTask: Task<Void, Never>?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let overlay = OverlayController(store: store, dockObserver: dockObserver, skinTracker: skinTracker, trash: trash)
+        let overlay = OverlayController(store: store, dockObserver: dockObserver, skinTracker: skinTracker, trash: trash, idle: idle)
         overlay.start()
         self.overlay = overlay
 

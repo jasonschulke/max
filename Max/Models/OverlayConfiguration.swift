@@ -152,6 +152,12 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     /// ⌃⌥⌘M toggles the bar from anywhere.
     var globalShortcutEnabled = true
     var settingsAppearance: SettingsAppearance = .system
+    /// Screen care: shift what Max draws over the Dock by a pixel every few minutes.
+    var driftsIcons = true
+    /// Screen care: darken the bar after a while without input.
+    var dimsWhenIdle = false
+    /// Minutes without input before the bar dims.
+    var idleDimMinutes = 5.0
 
     static let opacityRange = 0.1...1.0
     static let heightAdjustmentRange = -40.0...120.0
@@ -160,6 +166,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     static let tintStrengthRange = 0.0...1.0
     /// Past 125%, icons would start to touch at the Dock's spacing.
     static let iconScaleRange = 0.5...1.25
+    static let idleDimMinutesRange = 1.0...30.0
 
     init() {}
 
@@ -168,6 +175,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case isEnabled, skinsDock, showsIndicators, marksFrontmostApp, showsBadges, bouncesOnLaunch, iconScale, pinnedDisplay, style, blurMaterial, opacity, heightMode, heightAdjustment, customHeight
         case cornerRadius, tint, animationsEnabled, mirrorsDockAutoHide, globalShortcutEnabled, settingsAppearance
+        case driftsIcons, dimsWhenIdle, idleDimMinutes
     }
 
     init(from decoder: Decoder) throws {
@@ -193,6 +201,9 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
         mirrorsDockAutoHide = try container.decodeIfPresent(Bool.self, forKey: .mirrorsDockAutoHide) ?? defaults.mirrorsDockAutoHide
         globalShortcutEnabled = try container.decodeIfPresent(Bool.self, forKey: .globalShortcutEnabled) ?? defaults.globalShortcutEnabled
         settingsAppearance = container.decodeEnum(SettingsAppearance.self, forKey: .settingsAppearance) ?? defaults.settingsAppearance
+        driftsIcons = try container.decodeIfPresent(Bool.self, forKey: .driftsIcons) ?? defaults.driftsIcons
+        dimsWhenIdle = try container.decodeIfPresent(Bool.self, forKey: .dimsWhenIdle) ?? defaults.dimsWhenIdle
+        idleDimMinutes = try container.decodeIfPresent(Double.self, forKey: .idleDimMinutes) ?? defaults.idleDimMinutes
         self = validated()
     }
 
@@ -206,6 +217,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
         config.cornerRadius = cornerRadius.clamped(to: Self.cornerRadiusRange)
         config.tint.strength = tint.strength.clamped(to: Self.tintStrengthRange)
         config.iconScale = iconScale.clamped(to: Self.iconScaleRange)
+        config.idleDimMinutes = idleDimMinutes.clamped(to: Self.idleDimMinutesRange)
         return config
     }
 }
