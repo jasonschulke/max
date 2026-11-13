@@ -106,6 +106,8 @@ struct DockPane: View {
                                   in: DockGeometry.tileSizeRange, label: points)
                 }
                 if skins {
+                    SettingSlider("Icon size", value: config.iconScale, in: OverlayConfiguration.iconScaleRange,
+                                  label: percent, onEditingChanged: setInteracting)
                     SettingSlider("Extra height", value: Binding(
                         get: { max(0, store.configuration.heightAdjustment) },
                         set: { store.configuration.heightAdjustment = $0.rounded() }
@@ -127,7 +129,7 @@ struct DockPane: View {
                 Text("Size")
             } footer: {
                 Text(skins
-                     ? "Dock size resizes the Dock itself, and windows always stop above it. A full Dock is already shrunk to fit the screen, so it can only get smaller. Extra height makes the bar taller than the Dock with the icons kept centered; windows can extend under the extra height."
+                     ? "Dock size resizes the Dock itself, and windows always stop above it. A full Dock is already shrunk to fit the screen, so it can only get smaller. Icon size scales the icons Max draws without changing the Dock's spacing. Extra height makes the bar taller than the Dock with the icons kept centered; windows can extend under the extra height."
                      : "Dock size resizes the Dock itself. Match Dock sizes the bar to the strip macOS reserves for the Dock.")
             }
 

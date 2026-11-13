@@ -54,11 +54,11 @@ nonisolated enum DockSkin {
         CGRect(x: axPosition.x, y: primaryScreenHeight - axPosition.y - axSize.height, width: axSize.width, height: axSize.height)
     }
 
-    /// The square an item's icon image is drawn in: Apple's size, at the item's place along the bar, and centered
-    /// across the bar so icons stay in the middle however tall the bar is.
-    static func iconFrame(for slot: CGRect, in bar: CGRect, orientation: DockOrientation) -> CGRect {
+    /// The square an item's icon image is drawn in: Apple's size times `scale`, at the item's place along the bar,
+    /// and centered across the bar so icons stay in the middle however tall the bar is.
+    static func iconFrame(for slot: CGRect, in bar: CGRect, orientation: DockOrientation, scale: Double = 1) -> CGRect {
         let along = orientation == .bottom ? slot.width : slot.height
-        let side = min(along * CGFloat(iconFraction), slot.width, slot.height)
+        let side = min(along * CGFloat(iconFraction), slot.width, slot.height) * CGFloat(scale)
         let center = orientation == .bottom ? CGPoint(x: slot.midX, y: bar.midY) : CGPoint(x: bar.midX, y: slot.midY)
         return CGRect(x: center.x - side / 2, y: center.y - side / 2, width: side, height: side)
     }

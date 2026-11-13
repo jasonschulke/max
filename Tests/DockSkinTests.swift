@@ -39,6 +39,11 @@ let dockSkinTests: [TestCase] = [
         let side = DockSkin.iconFrame(for: CGRect(x: 0, y: 100, width: 44, height: 32), in: CGRect(x: 0, y: 0, width: 60, height: 900), orientation: .left)
         expectClose(Double(side.width), 32 * DockSkin.iconFraction)
         expectClose(Double(side.midX), 30)
+        // Icon size scales around the same center.
+        let large = DockSkin.iconFrame(for: slot, in: bar, orientation: .bottom, scale: 1.25)
+        expectClose(Double(large.width), Double(icon.width) * 1.25)
+        expectClose(Double(large.midX), Double(icon.midX))
+        expectClose(Double(large.midY), Double(icon.midY))
     },
     TestCase(name: "running indicators sit just past the visible icon, toward the screen edge") {
         let icon = CGRect(x: 10, y: 10, width: 40, height: 40)

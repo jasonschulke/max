@@ -97,7 +97,7 @@ final class OverlayController {
         window.setCoversDock(skins)
         skinView.isHidden = !skins
         if skins {
-            skinView.update(items: snapshot.skin.items, orientation: snapshot.dock.orientation)
+            skinView.update(items: snapshot.skin.items, orientation: snapshot.dock.orientation, iconScale: config.iconScale)
         }
 
         let followsDock = config.isEnabled && snapshot.dock.autoHides && config.mirrorsDockAutoHide

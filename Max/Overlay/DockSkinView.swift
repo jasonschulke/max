@@ -5,6 +5,7 @@ import AppKit
 final class DockSkinView: NSView {
     private var items: [SkinItem] = []
     private var orientation: DockOrientation = .bottom
+    private var iconScale = 1.0
     private var icons: [URL: NSImage] = [:]
 
     override init(frame: NSRect) {
@@ -15,10 +16,11 @@ final class DockSkinView: NSView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("not supported") }
 
-    func update(items: [SkinItem], orientation: DockOrientation) {
-        guard items != self.items || orientation != self.orientation else { return }
+    func update(items: [SkinItem], orientation: DockOrientation, iconScale: Double) {
+        guard items != self.items || orientation != self.orientation || iconScale != self.iconScale else { return }
         self.items = items
         self.orientation = orientation
+        self.iconScale = iconScale
         needsDisplay = true
     }
 
@@ -44,7 +46,7 @@ final class DockSkinView: NSView {
     }
 
     private func draw(_ item: SkinItem, in slot: NSRect) {
-        let icon = DockSkin.iconFrame(for: slot, in: bounds, orientation: orientation)
+        let icon = DockSkin.iconFrame(for: slot, in: bounds, orientation: orientation, scale: iconScale)
         switch item.kind {
         case .separator:
             let length = (orientation == .bottom ? slot.height : slot.width) * 0.6

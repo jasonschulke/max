@@ -105,6 +105,8 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     /// Sit over Apple's Dock and draw its icons where it draws them (needs Accessibility access),
     /// instead of sitting behind it.
     var skinsDock = false
+    /// Scales the icons Max draws over the Dock, around the Dock's own size; spacing stays the Dock's.
+    var iconScale = 1.0
     /// The display the Dock is kept on (its CoreGraphics UUID), or nil to let it move freely.
     var pinnedDisplay: String?
     var style: Style = .glass
@@ -130,13 +132,15 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     static let customHeightRange = 20.0...300.0
     static let cornerRadiusRange = 0.0...40.0
     static let tintStrengthRange = 0.0...1.0
+    /// Past 125%, icons would start to touch at the Dock's spacing.
+    static let iconScaleRange = 0.5...1.25
 
     init() {}
 
     // MARK: Codable (missing or unknown values fall back to defaults)
 
     private enum CodingKeys: String, CodingKey {
-        case isEnabled, skinsDock, pinnedDisplay, style, blurMaterial, opacity, heightMode, heightAdjustment, customHeight
+        case isEnabled, skinsDock, iconScale, pinnedDisplay, style, blurMaterial, opacity, heightMode, heightAdjustment, customHeight
         case cornerRadius, tint, animationsEnabled, mirrorsDockAutoHide, globalShortcutEnabled
     }
 
@@ -145,6 +149,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
         let defaults = OverlayConfiguration()
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? defaults.isEnabled
         skinsDock = try container.decodeIfPresent(Bool.self, forKey: .skinsDock) ?? defaults.skinsDock
+        iconScale = try container.decodeIfPresent(Double.self, forKey: .iconScale) ?? defaults.iconScale
         pinnedDisplay = try container.decodeIfPresent(String.self, forKey: .pinnedDisplay)
         style = container.decodeEnum(Style.self, forKey: .style) ?? defaults.style
         blurMaterial = container.decodeEnum(BlurMaterial.self, forKey: .blurMaterial) ?? defaults.blurMaterial
@@ -169,6 +174,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
         config.customHeight = customHeight.clamped(to: Self.customHeightRange)
         config.cornerRadius = cornerRadius.clamped(to: Self.cornerRadiusRange)
         config.tint.strength = tint.strength.clamped(to: Self.tintStrengthRange)
+        config.iconScale = iconScale.clamped(to: Self.iconScaleRange)
         return config
     }
 }

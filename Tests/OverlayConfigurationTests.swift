@@ -19,17 +19,20 @@ let overlayConfigurationTests: [TestCase] = [
         config.customHeight = 1
         config.cornerRadius = 99
         config.tint.strength = -1
+        config.iconScale = 3
         let valid = config.validated()
         expectEqual(valid.opacity, OverlayConfiguration.opacityRange.upperBound)
         expectEqual(valid.heightAdjustment, OverlayConfiguration.heightAdjustmentRange.lowerBound)
         expectEqual(valid.customHeight, OverlayConfiguration.customHeightRange.lowerBound)
         expectEqual(valid.cornerRadius, OverlayConfiguration.cornerRadiusRange.upperBound)
         expectEqual(valid.tint.strength, 0)
+        expectEqual(valid.iconScale, OverlayConfiguration.iconScaleRange.upperBound)
     },
     TestCase(name: "JSON round trip preserves every field") {
         var config = OverlayConfiguration()
         config.isEnabled = false
         config.skinsDock = true
+        config.iconScale = 0.8
         config.pinnedDisplay = "4A2C-UUID"
         config.style = .solid
         config.blurMaterial = .hudWindow
