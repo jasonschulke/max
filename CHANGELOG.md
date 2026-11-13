@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0 — unreleased
+## 2.0.0 — 2026-11-13
 
 A rewrite for macOS 26 and Liquid Glass, and a new name: Max is now Dock Max.
 
