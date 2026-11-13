@@ -1,8 +1,8 @@
 # Builds Max with the Swift toolchain from Xcode Command Line Tools (no Xcode needed).
-#   make          – build Max.app (universal, ad-hoc signed)
+#   make          – build build.noindex/Max.app (universal)
 #   make test     – run the model tests
-#   make run      – build, then launch Max.app
-#   make install  – copy Max.app to /Applications
+#   make run      – build, then launch it
+#   make install  – copy it to /Applications and refresh its icon and Spotlight entry
 
 APP_NAME      := Max
 BUNDLE_ID     := jasonschulke.Max
@@ -14,8 +14,11 @@ ARCHS         := arm64 x86_64
 # "Max Local Signing" certificate (Tools/make-signing-identity.sh) does not, so it is used when present.
 SIGN_IDENTITY ?= $(shell security find-certificate -c "Max Local Signing" >/dev/null 2>&1 && echo "Max Local Signing" || echo -)
 
-APP           := $(APP_NAME).app
-BUILD_DIR     := build
+# Spotlight skips folders named *.noindex, so the build copy never shows up next to the installed one.
+BUILD_DIR     := build.noindex
+APP           := $(BUILD_DIR)/$(APP_NAME).app
+INSTALLED     := /Applications/$(APP_NAME).app
+LSREGISTER    := /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
 SDK           := $(shell xcrun --show-sdk-path)
 SOURCES       := $(shell find Max -name '*.swift' | sort)
 MODEL_SOURCES := $(sort $(wildcard Max/Models/*.swift))
@@ -62,8 +65,11 @@ run: build
 	open $(APP)
 
 install: build
-	rm -rf /Applications/$(APP)
-	cp -R $(APP) /Applications/$(APP)
+	rm -rf $(INSTALLED)
+	cp -R $(APP) $(INSTALLED)
+	touch $(INSTALLED)
+	$(LSREGISTER) -f $(INSTALLED)
+	mdimport $(INSTALLED)
 
 clean:
-	rm -rf $(BUILD_DIR) $(APP)
+	rm -rf $(BUILD_DIR)

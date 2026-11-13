@@ -16,8 +16,6 @@
 	<string>APPL</string>
 	<key>CFBundleIconFile</key>
 	<string>Max</string>
-	<key>CFBundleIconName</key>
-	<string>AppIcon</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>

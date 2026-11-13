@@ -1,4 +1,5 @@
 # Build products
+/build.noindex/
 /build/
 /Max.app
 *.dSYM

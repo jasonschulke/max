@@ -40,13 +40,15 @@ Open `Max.xcodeproj` and run the `Max` scheme. The `MaxTests` scheme runs the mo
 ### Without Xcode (Command Line Tools only)
 
 ```bash
-make          # builds Max.app (universal, ad-hoc signed; SIGN_IDENTITY=… to sign with a certificate)
+make          # builds build.noindex/Max.app (universal; SIGN_IDENTITY=… picks the signing identity)
 make test     # runs the model tests
 make run      # builds and launches
-make install  # copies Max.app to /Applications
+make install  # copies Max.app to /Applications and refreshes its icon and Spotlight entry
 ```
 
-`Max.app` is built in the repository root and is ignored by git. The app icon is drawn by
+`Max.app` is built in `build.noindex/` (ignored by git; Spotlight skips `.noindex` folders, so only the
+installed copy shows up in search). The command-line build has no asset catalog compiler, so it ships
+the icon as `Max.icns`; Xcode builds use the asset catalog. The app icon is drawn by
 `swift Tools/make-icon.swift`, which writes `Max/Resources/Max.icns` and the asset catalog's PNGs.
 
 macOS ties Accessibility and Full Disk Access to the app's signature, and an ad-hoc signature changes
