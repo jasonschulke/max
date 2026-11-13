@@ -77,6 +77,23 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
         }
     }
 
+    /// How the Settings window looks, independent of the system.
+    enum SettingsAppearance: String, Codable, CaseIterable, Identifiable, Sendable {
+        case system
+        case light
+        case dark
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .system: "System"
+            case .light: "Light"
+            case .dark: "Dark"
+            }
+        }
+    }
+
     struct Tint: Codable, Equatable, Sendable {
         var isEnabled = false
         var color = RGBAColor(red: 0.08, green: 0.08, blue: 0.1)
@@ -132,6 +149,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
     var mirrorsDockAutoHide = true
     /// ⌃⌥⌘M toggles the bar from anywhere.
     var globalShortcutEnabled = true
+    var settingsAppearance: SettingsAppearance = .system
 
     static let opacityRange = 0.1...1.0
     static let heightAdjustmentRange = -40.0...120.0
@@ -147,7 +165,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case isEnabled, skinsDock, showsIndicators, showsBadges, bouncesOnLaunch, iconScale, pinnedDisplay, style, blurMaterial, opacity, heightMode, heightAdjustment, customHeight
-        case cornerRadius, tint, animationsEnabled, mirrorsDockAutoHide, globalShortcutEnabled
+        case cornerRadius, tint, animationsEnabled, mirrorsDockAutoHide, globalShortcutEnabled, settingsAppearance
     }
 
     init(from decoder: Decoder) throws {
@@ -171,6 +189,7 @@ nonisolated struct OverlayConfiguration: Codable, Equatable, Sendable {
         animationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .animationsEnabled) ?? defaults.animationsEnabled
         mirrorsDockAutoHide = try container.decodeIfPresent(Bool.self, forKey: .mirrorsDockAutoHide) ?? defaults.mirrorsDockAutoHide
         globalShortcutEnabled = try container.decodeIfPresent(Bool.self, forKey: .globalShortcutEnabled) ?? defaults.globalShortcutEnabled
+        settingsAppearance = container.decodeEnum(SettingsAppearance.self, forKey: .settingsAppearance) ?? defaults.settingsAppearance
         self = validated()
     }
 

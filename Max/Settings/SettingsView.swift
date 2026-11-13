@@ -15,7 +15,7 @@ struct SettingsView: View {
     var body: some View {
         TabView {
             Tab("General", systemImage: "gearshape") {
-                GeneralPane(store: store, loginItem: loginItem)
+                GeneralPane(store: store, loginItem: loginItem, skin: skin)
             }
             Tab("Dock", systemImage: "dock.rectangle") {
                 DockPane(store: store, skin: skin, dockSize: dockSize, pinner: pinner, trash: trash)
@@ -35,6 +35,16 @@ struct SettingsView: View {
             }
         }
         .frame(width: 540)
+        .tint(MaxTheme.accent)
+        .preferredColorScheme(colorScheme)
+    }
+
+    private var colorScheme: ColorScheme? {
+        switch store.configuration.settingsAppearance {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
+        }
     }
 }
 
@@ -43,14 +53,34 @@ struct SettingsView: View {
 struct GeneralPane: View {
     @Bindable var store: SettingsStore
     let loginItem: LoginItemSettings
+    let skin: DockSkinTracker
 
     var body: some View {
         Form {
+            Section {
+                HStack(spacing: 14) {
+                    Image(nsImage: NSApp.applicationIconImage)
+                        .resizable()
+                        .frame(width: 52, height: 52)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Max")
+                            .font(.title2.weight(.semibold))
+                        Text(status)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                }
+                .padding(.vertical, 4)
+            }
             Section {
                 Toggle("Show the bar", isOn: $store.configuration.isEnabled)
                 Toggle("Launch at login", isOn: Binding(get: { loginItem.isEnabled }, set: { loginItem.setEnabled($0) }))
             }
             Section("Behavior") {
+                Picker("Settings appearance", selection: $store.configuration.settingsAppearance) {
+                    ForEach(OverlayConfiguration.SettingsAppearance.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
                 Toggle("Animate changes", isOn: $store.configuration.animationsEnabled)
                 Toggle("Toggle the bar with \(GlobalHotKey.Shortcut.toggleOverlay.display)", isOn: $store.configuration.globalShortcutEnabled)
             }
@@ -60,8 +90,8 @@ struct GeneralPane: View {
                 }
             }
         }
-        .formStyle(.grouped)
-        .frame(height: 340)
+        .themedForm()
+        .frame(height: 440)
         .onAppear { loginItem.refresh() }
         .alert("Launch at Login", isPresented: Binding(
             get: { loginItem.message != nil },
@@ -72,6 +102,15 @@ struct GeneralPane: View {
         } message: {
             Text(loginItem.message ?? "")
         }
+    }
+}
+
+extension GeneralPane {
+    fileprivate var status: String {
+        let configuration = store.configuration
+        if !configuration.isEnabled { return "The bar is off" }
+        if configuration.skinsDock { return skin.isTrusted ? "Drawing over the Dock" : "Waiting for Accessibility access" }
+        return "Behind the Dock"
     }
 }
 
@@ -176,7 +215,7 @@ struct DockPane: View {
                 Toggle("Follow the Dock when it auto-hides", isOn: config.mirrorsDockAutoHide)
             }
         }
-        .formStyle(.grouped)
+        .themedForm()
         .frame(height: 680)
         .onAppear { pinner.refresh() }
     }
@@ -258,7 +297,7 @@ struct AppearancePane: View {
                      : "Washes over the material.")
             }
         }
-        .formStyle(.grouped)
+        .themedForm()
         .frame(height: 640)
     }
 
@@ -346,7 +385,7 @@ struct WindowsPane: View {
                 Text("Give an app its own radius instead of the one above. Sandboxed apps, like most App Store apps, keep their own copy of settings, so an exception may not reach them.")
             }
         }
-        .formStyle(.grouped)
+        .themedForm()
         .frame(height: 480)
         .alert("Relaunch \(windowCorners.pendingRelaunch.count) Apps?", isPresented: Binding(
             get: { !windowCorners.pendingRelaunch.isEmpty },
@@ -400,6 +439,7 @@ struct AboutPane: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: 320)
+        .background(ThemeBackground())
     }
 }
 
@@ -419,10 +459,8 @@ private struct BarPreview: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            LinearGradient(
-                colors: [Color(red: 0.27, green: 0.33, blue: 0.56), Color(red: 0.55, green: 0.42, blue: 0.62), Color(red: 0.86, green: 0.58, blue: 0.47)],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            )
+            // A bright violet sample wallpaper, so the bar stands out in light and dark windows alike.
+            LinearGradient(colors: MaxTheme.wallpaper, startPoint: .topLeading, endPoint: .bottomTrailing)
             bar
         }
         .frame(height: 128)
@@ -543,4 +581,53 @@ private func points(_ value: Double) -> String { "\(Int(value.rounded())) pt" }
 private func signedPoints(_ value: Double) -> String {
     let rounded = Int(value.rounded())
     return rounded > 0 ? "+\(rounded) pt" : "\(rounded) pt"
+}
+
+// MARK: - Theme
+
+/// Colors from the app icon: a deep violet desktop with lavender tiles. Dark mode takes them as they are; light mode
+/// keeps the violet accent over a pale lavender wash.
+enum MaxTheme {
+    static let desktop = [Color(hex: 0x2A2350), Color(hex: 0x1A1530), Color(hex: 0x2B1838)]
+    static let wash = [Color(hex: 0xF8F6FF), Color(hex: 0xF0EBFD), Color(hex: 0xF7EFFA)]
+    static let wallpaper = [Color(hex: 0x5A6BF0), Color(hex: 0x7B55D6), Color(hex: 0xB65FC2)]
+
+    static let accent = Color(nsColor: NSColor(name: nil) { appearance in
+        appearance.isDark ? NSColor(hex: 0xA78BFA) : NSColor(hex: 0x6D5BD0)
+    })
+}
+
+/// The window background: the icon's desktop in dark mode, a lavender wash in light mode.
+struct ThemeBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        LinearGradient(colors: colorScheme == .dark ? MaxTheme.desktop : MaxTheme.wash, startPoint: .topLeading, endPoint: .bottomTrailing)
+            .ignoresSafeArea()
+    }
+}
+
+extension View {
+    /// A grouped form laid over the theme's background.
+    func themedForm() -> some View {
+        formStyle(.grouped)
+            .scrollContentBackground(.hidden)
+            .background(ThemeBackground())
+    }
+}
+
+extension Color {
+    init(hex: UInt32) {
+        self.init(nsColor: NSColor(hex: hex))
+    }
+}
+
+extension NSColor {
+    convenience init(hex: UInt32) {
+        self.init(srgbRed: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255, blue: CGFloat(hex & 0xFF) / 255, alpha: 1)
+    }
+}
+
+private extension NSAppearance {
+    var isDark: Bool { bestMatch(from: [.darkAqua, .aqua]) == .darkAqua }
 }

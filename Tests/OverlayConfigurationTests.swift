@@ -48,6 +48,7 @@ let overlayConfigurationTests: [TestCase] = [
         config.animationsEnabled = false
         config.mirrorsDockAutoHide = false
         config.globalShortcutEnabled = false
+        config.settingsAppearance = .dark
         let data = try JSONEncoder().encode(config)
         let decoded = try JSONDecoder().decode(OverlayConfiguration.self, from: data)
         expectEqual(decoded, config)

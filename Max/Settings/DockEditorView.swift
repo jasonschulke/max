@@ -22,6 +22,7 @@ struct DockEditorView: View {
                 }
             }
             .onDeleteCommand { editor.removeSelected() }
+            .scrollContentBackground(.hidden)
 
             Divider()
 
@@ -70,6 +71,7 @@ struct DockEditorView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding([.horizontal, .bottom], 12)
         }
+        .background(ThemeBackground())
         .onAppear {
             if !editor.hasChanges { editor.reload() }
         }
