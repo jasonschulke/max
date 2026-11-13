@@ -1,6 +1,7 @@
 // Draws Max's app icon and writes it as an .icns file and into the asset catalog.
 //   swift Tools/make-icon.swift            (run from the repository root)
-// The icon: a desktop with two windows tiled flush, square-cornered, above a bar that runs the full width.
+// The icon: a dark desktop with two windows tiled flush, square-cornered, above a bar that runs the full width,
+// its app tiles in the desktop's violets.
 import AppKit
 
 let resources = URL(fileURLWithPath: "Max/Resources")
@@ -23,53 +24,42 @@ func drawIcon() {
     shadow.shadowOffset = NSSize(width: 0, height: -10)
     shadow.shadowBlurRadius = 22
     shadow.set()
-    color(0x3E4FC1).setFill()
+    color(0x2A2350).setFill()
     bodyPath.fill()
     NSGraphicsContext.restoreGraphicsState()
 
     NSGraphicsContext.saveGraphicsState()
     bodyPath.addClip()
 
-    // The desktop: indigo to violet, with a soft light from the top left.
-    NSGradient(colors: [color(0x5A6BF0), color(0x7B55D6), color(0xB65FC2)])!.draw(in: body, angle: -60)
-    NSGradient(colors: [NSColor.white.withAlphaComponent(0.22), NSColor.white.withAlphaComponent(0)])!
-        .draw(fromCenter: NSPoint(x: 260, y: 840), radius: 0, toCenter: NSPoint(x: 260, y: 840), radius: 520, options: [])
+    // A dark desktop: deep violet to plum.
+    NSGradient(colors: [color(0x2A2350), color(0x1A1530), color(0x2B1838)])!.draw(in: body, angle: -60)
 
     // Two windows tiled side by side, square corners, flush against each other.
     let barTop: CGFloat = 268
     let windows = [
-        (NSRect(x: 188, y: barTop + 64, width: 330, height: 470), NSColor.white.withAlphaComponent(0.94)),
-        (NSRect(x: 518, y: barTop + 64, width: 318, height: 470), color(0xEDEBFA, 0.86)),
+        (NSRect(x: 188, y: barTop + 64, width: 330, height: 470), color(0x3A3550), color(0xFFFFFF, 0.06)),
+        (NSRect(x: 518, y: barTop + 64, width: 318, height: 470), color(0x2F2B45), color(0xFFFFFF, 0.05)),
     ]
-    for (frame, fill) in windows {
+    for (frame, fill, title) in windows {
         fill.setFill()
         frame.fill()
-        // Title bar.
-        color(0x1E1B4B, 0.08).setFill()
+        title.setFill()
         NSRect(x: frame.minX, y: frame.maxY - 58, width: frame.width, height: 58).fill()
     }
     for (index, dot) in [color(0xFF5F57), color(0xFEBC2E), color(0x28C840)].enumerated() {
         dot.setFill()
         NSBezierPath(ovalIn: NSRect(x: 214 + CGFloat(index) * 34, y: barTop + 64 + 470 - 41, width: 22, height: 22)).fill()
     }
-    // Content lines in each window.
-    color(0x1E1B4B, 0.12).setFill()
-    for (frame, _) in windows {
-        for row in 0..<4 {
-            let width = frame.width * [0.72, 0.56, 0.66, 0.42][row]
-            NSBezierPath(roundedRect: NSRect(x: frame.minX + 30, y: frame.maxY - 110 - CGFloat(row) * 52, width: width, height: 18), xRadius: 9, yRadius: 9).fill()
-        }
-    }
 
     // The bar, edge to edge along the bottom.
     let bar = NSRect(x: body.minX, y: body.minY, width: body.width, height: barTop - body.minY)
-    color(0x161A2B, 0.92).setFill()
+    color(0x0C0B14, 0.95).setFill()
     bar.fill()
-    NSColor.white.withAlphaComponent(0.22).setFill()
+    NSColor.white.withAlphaComponent(0.2).setFill()
     NSRect(x: bar.minX, y: bar.maxY - 3, width: bar.width, height: 3).fill()
 
-    // App tiles, centered, with running dots under two of them.
-    let tileColors = [color(0xFF6B5E), color(0xFFB547), color(0x3DD68C), color(0x4CB3FF), color(0xB48CFF)]
+    // App tiles in the desktop's violets, light to dark, with running dots under two of them.
+    let tileColors = [color(0xDDD6FE), color(0xC4B5FD), color(0xA78BFA), color(0x8B7CF6), color(0x6D5BD0)]
     let tile: CGFloat = 86
     let gap: CGFloat = 24
     let total = CGFloat(tileColors.count) * tile + CGFloat(tileColors.count - 1) * gap
@@ -79,8 +69,8 @@ func drawIcon() {
         fill.setFill()
         NSBezierPath(roundedRect: NSRect(x: x, y: tileY, width: tile, height: tile), xRadius: 22, yRadius: 22).fill()
         if index == 0 || index == 3 {
-            NSColor.white.withAlphaComponent(0.8).setFill()
-            NSBezierPath(ovalIn: NSRect(x: x + tile / 2 - 6, y: tileY - 26, width: 12, height: 12)).fill()
+            color(0xC4B5FD).setFill()
+            NSBezierPath(ovalIn: NSRect(x: x + tile / 2 - 6, y: tileY - 24, width: 12, height: 12)).fill()
         }
         x += tile + gap
     }

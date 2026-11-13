@@ -54,7 +54,8 @@ private struct MenuBarMenu: View {
     }
 }
 
-/// Max's mark for the menu bar: a screen with a bar running its full width along the bottom.
+/// Max's mark for the menu bar, after the app icon: a screen with a bar running its full width along the bottom,
+/// app tiles cut out of it.
 enum MenuBarIcon {
     static let image: NSImage = {
         let image = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { _ in
@@ -68,6 +69,14 @@ enum MenuBarIcon {
             NSBezierPath(roundedRect: screen, xRadius: 2.75, yRadius: 2.75).addClip()
             NSRect(x: screen.minX, y: screen.minY, width: screen.width, height: 4.5).fill()
             NSGraphicsContext.restoreGraphicsState()
+            // Three tiles, cut out of the bar.
+            NSGraphicsContext.current?.compositingOperation = .clear
+            let tile: CGFloat = 1.75
+            let gap: CGFloat = 1.25
+            let total = 3 * tile + 2 * gap
+            for index in 0..<3 {
+                NSRect(x: screen.midX - total / 2 + CGFloat(index) * (tile + gap), y: screen.minY + 1.4, width: tile, height: tile).fill()
+            }
             return true
         }
         image.isTemplate = true
