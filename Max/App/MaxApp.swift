@@ -9,7 +9,7 @@ struct MaxApp: App {
             MenuBarMenu(store: appDelegate.store, profiles: appDelegate.dockProfiles)
         } label: {
             Image(nsImage: MenuBarIcon.image)
-                .accessibilityLabel("Max")
+                .accessibilityLabel("Dock Max")
         }
 
         Settings {
@@ -44,12 +44,12 @@ private struct MenuBarMenu: View {
             WindowFront.bring { $0.identifier?.rawValue == "com_apple_SwiftUI_Settings_window" || ($0.styleMask.contains(.titled) && !($0 is NSPanel)) }
         }
         .keyboardShortcut(",")
-        Button("About Max") {
+        Button("About Dock Max") {
             NSApp.orderFrontStandardAboutPanel(nil)
             WindowFront.bring { $0 is NSPanel && $0.styleMask.contains(.titled) }
         }
         Divider()
-        Button("Quit Max") {
+        Button("Quit Dock Max") {
             NSApp.terminate(nil)
         }
         .keyboardShortcut("q")

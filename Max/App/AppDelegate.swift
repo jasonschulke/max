@@ -2,6 +2,7 @@ import AppKit
 import Observation
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    // First, so it can copy pre-rename settings before the other stores read theirs.
     let store = SettingsStore()
     let dockObserver = DockObserver()
     let loginItem = LoginItemSettings()

@@ -21,6 +21,7 @@ final class SettingsStore {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        Self.copyPreRenameSettings(into: defaults)
         if let data = defaults.data(forKey: Self.storageKey),
            let stored = try? JSONDecoder().decode(OverlayConfiguration.self, from: data) {
             configuration = stored
@@ -42,6 +43,18 @@ final class SettingsStore {
     private func persist() {
         guard let data = try? JSONEncoder().encode(configuration) else { return }
         defaults.set(data, forKey: Self.storageKey)
+    }
+
+    /// Before its first release, Dock Max was "Max" with the bundle identifier `jasonschulke.Max`. Copies everything
+    /// saved there (this configuration, Dock profiles, window corner exceptions) once, so a renamed install keeps it.
+    /// The app delegate creates this store first, so the other stores read the copied values.
+    private static func copyPreRenameSettings(into defaults: UserDefaults) {
+        let doneKey = "copiedPreRenameSettings"
+        guard !defaults.bool(forKey: doneKey) else { return }
+        defaults.set(true, forKey: doneKey)
+        guard defaults.object(forKey: storageKey) == nil,
+              let old = defaults.persistentDomain(forName: "jasonschulke.Max") else { return }
+        for (key, value) in old { defaults.set(value, forKey: key) }
     }
 
     /// Max 1.0 archived its NSColor with NSKeyedArchiver.

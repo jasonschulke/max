@@ -1,9 +1,11 @@
 #!/bin/sh
-# Creates a self-signed code signing certificate, "Max Local Signing", in the login keychain.
-# `make` signs with it when it exists, so macOS keeps Max's Accessibility access across builds
+# Creates a self-signed code signing certificate, "Prep Work Code Signing", in the login keychain.
+# `make` signs with it when it exists, so macOS keeps Dock Max's Accessibility access across builds
 # (an ad-hoc signature changes with every build; a certificate's does not).
+# Releases are signed with it too, so users keep that access across updates. Back it up (Keychain Access →
+# export as .p12): a release signed with a different certificate makes every user grant access again.
 set -e
-NAME="Max Local Signing"
+NAME="Prep Work Code Signing"
 if security find-certificate -c "$NAME" >/dev/null 2>&1; then
     echo "\"$NAME\" already exists."
     exit 0

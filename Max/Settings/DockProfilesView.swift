@@ -61,8 +61,8 @@ struct ProfilesPane: View {
                 Text("Backup")
             } footer: {
                 Text(profiles.hasBackup
-                     ? "Max saved your Dock before it first changed it."
-                     : "Max saves your Dock the first time it changes it.")
+                     ? "Dock Max saved your Dock before it first changed it."
+                     : "Dock Max saves your Dock the first time it changes it.")
             }
         }
         .themedForm()
@@ -98,7 +98,7 @@ struct ProfilesPane: View {
             Button("Restore", role: .destructive) { profiles.restoreBackup() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Puts back the Dock's apps, folders, and spacers from before Max first changed them, and restarts the Dock.")
+            Text("Puts back the Dock's apps, folders, and spacers from before Dock Max first changed them, and restarts the Dock.")
         }
     }
 }

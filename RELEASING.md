@@ -1,49 +1,49 @@
 # Releasing
 
-Max ships outside the App Store: a Developer ID–signed, notarized DMG on GitHub Releases, plus a cask in
-a Homebrew tap. Everything runs with the Command Line Tools.
+Dock Max ships outside the App Store as a DMG on GitHub Releases. For now it is signed with a self-signed
+certificate, not an Apple Developer ID, so macOS asks users to approve it once per version (the README's
+Install steps). Everything runs with the Command Line Tools.
 
-## Before the first public release
+## Once
 
-1. **Settle the name.** "Max" collides with other software (Homebrew's `max` cask is Cycling '74's Max).
-   If the name changes, update `APP_NAME` and `BUNDLE_ID` in the `Makefile`, the Xcode project's
-   product name and bundle identifier, the README and its brand note, and the cask.
-2. **Settle the bundle identifier.** Use reverse DNS, for example `com.jasonschulke.max`. Changing it
-   later resets users' settings and permissions, so do it before release; to keep your own settings,
-   copy them over once with `defaults export jasonschulke.Max - | defaults import <new id> -`.
-3. **Join the Apple Developer Program** and create a *Developer ID Application* certificate (Xcode, or
-   developer.apple.com → Certificates).
-4. **Store notarization credentials** in the keychain:
-
-   ```bash
-   xcrun notarytool store-credentials max-notary --apple-id <you@example.com> --team-id <TEAMID>
-   ```
+1. **Create the signing certificate:** `Tools/make-signing-identity.sh`. It adds "Prep Work Code Signing" to
+   your login keychain.
+2. **Back it up.** In Keychain Access, find "Prep Work Code Signing" under My Certificates, export it as a
+   .p12 with a password, and keep it with your other secrets. macOS ties each user's Accessibility access to
+   this certificate. A release signed with a different one (a new certificate, or none) makes every user
+   grant access again.
 
 ## Each release
 
-1. Bump `VERSION` and `BUILD_NUMBER` in the `Makefile` (and `MARKETING_VERSION` /
-   `CURRENT_PROJECT_VERSION` in the Xcode project), and move the changes in `CHANGELOG.md` under the new
-   version.
-2. Build, sign with the hardened runtime, package, notarize, and staple:
+1. Bump `VERSION` and `BUILD_NUMBER` in the `Makefile` (and `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`
+   in the Xcode project). In `CHANGELOG.md`, give the version a date in place of "unreleased".
+2. Build the DMG. This refuses to run without the certificate, and prints the DMG's SHA-256 at the end:
 
    ```bash
-   make release DEVELOPER_ID="Developer ID Application: Your Name (TEAMID)" NOTARY_PROFILE=max-notary
+   make release
    ```
 
-   This writes `build.noindex/Max-<version>.dmg`.
-3. Check it: `spctl --assess --type open --context context:primary-signature -v build.noindex/Max-<version>.dmg`.
-4. Tag and publish:
+3. Check it: open `build.noindex/DockMax-<version>.dmg`, drag Dock Max to Applications, and open it.
+4. Tag and publish, with that version's CHANGELOG section as the notes:
 
    ```bash
    git tag v<version> && git push origin v<version>
-   gh release create v<version> build.noindex/Max-<version>.dmg --title "Max <version>" --notes-file <notes>
+   gh release create v<version> build.noindex/DockMax-<version>.dmg --title "Dock Max <version>" --notes-file <notes>
    ```
-
-5. Update the cask in your tap (`jasonschulke/homebrew-tap`, starting from `Packaging/homebrew/max.rb`):
-   set `version` and `sha256` (`shasum -a 256 build.noindex/Max-<version>.dmg`), then push.
 
 ## Later
 
+- **Developer ID and notarization.** With the Apple Developer Program, macOS opens Dock Max without the
+  approval steps. Create a *Developer ID Application* certificate, store notarization credentials with
+  `xcrun notarytool store-credentials dockmax-notary --apple-id <you@example.com> --team-id <TEAMID>`, then
+  `make notarized DEVELOPER_ID="Developer ID Application: Your Name (TEAMID)" NOTARY_PROFILE=dockmax-notary`
+  and check it with `spctl --assess --type open --context context:primary-signature -v build.noindex/DockMax-<version>.dmg`.
+  Switching certificates makes users grant Accessibility access once more, so mention it in that release's
+  notes. Then update the README's Install steps.
+- **Homebrew.** Homebrew's main cask repository no longer accepts apps that fail Apple's notarization
+  check, and its own tap would still leave users with the approval steps, so wait for notarization. Then
+  publish `Packaging/homebrew/dock-max.rb` from a `jasonschulke/homebrew-tap` repository with the DMG's
+  `version` and `sha256`.
 - **Automatic updates.** Add [Sparkle](https://sparkle-project.org): embed the framework, generate an
   EdDSA key, publish an appcast with each release, and add a "Check for Updates…" menu item.
-- **CI.** Run `make test` on a GitHub Actions macOS runner once one with the macOS 26 SDK is available.
+- **CI.** Run `make test` on a GitHub Actions macOS runner with the macOS 26 SDK.

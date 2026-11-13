@@ -1,10 +1,10 @@
-# How Max works
+# How Dock Max works
 
 ## Placing the bar
 
 - **Geometry.** The Dock's strip is the gap between `NSScreen.frame` and `NSScreen.visibleFrame` on the
   Dock's edge; the display that reserves it is the Dock's display. Orientation, auto-hide, and tile size
-  come from the `com.apple.dock` preferences domain. Max refreshes on `com.apple.dock.prefchanged` and on
+  come from the `com.apple.dock` preferences domain. Dock Max refreshes on `com.apple.dock.prefchanged` and on
   screen-parameter changes.
 - **Window.** A borderless, click-through `NSWindow` on every Space, stationary in Mission Control. Behind
   the Dock it sits at `kCGDockWindowLevel - 1`; drawing over it, at `kCGDockWindowLevel + 1`. The window
@@ -18,15 +18,15 @@
 
 ## Drawing over the Dock
 
-Apple's Dock stays on, so macOS keeps reserving its strip. Max reads the Dock's items (position, size,
+Apple's Dock stays on, so macOS keeps reserving its strip. Dock Max reads the Dock's items (position, size,
 URL, running state, badge) from its Accessibility tree and draws each icon where the Dock does, centered
 across the bar. Its window stays click-through, so the Dock gets every click, hover, and drag.
 
-- **Keeping current.** Max re-reads the Dock when apps launch or quit, Dock preferences change, or
+- **Keeping current.** Dock Max re-reads the Dock when apps launch or quit, Dock preferences change, or
   displays change, several times as the layout animates, and every 2 seconds for badges. It finds the
   Dock again after a restart.
 - **Where the Dock really is.** The Dock can sit on another display, or hidden below an edge, while a
-  strip stays reserved. Max reads the frame of the Dock's whole list and hides the bar while the Dock
+  strip stays reserved. Dock Max reads the frame of the Dock's whole list and hides the bar while the Dock
   isn't on its display.
 - **Drags.** While something is dragged in the Dock (reordering, dropping files), the bar fades out so
   the Dock's own feedback shows.
@@ -40,7 +40,7 @@ across the bar. Its window stays click-through, so the Dock gets every click, ho
 ## Screen care
 
 A bar that never moves holds the same high-contrast edges for hours, which leaves image retention on
-LCDs (and burn-in on OLEDs). Max shifts everything it draws over the Dock around a two-point square, one
+LCDs (and burn-in on OLEDs). Dock Max shifts everything it draws over the Dock around a two-point square, one
 step every three minutes. Dimming darkens the bar with an opaque overlay after the configured idle time,
 read from `CGEventSource.secondsSinceLastEventType` once a second.
 
@@ -66,7 +66,7 @@ reads it once at launch for all its windows.
 
 ## State
 
-One `@Observable` settings store, saved as a JSON value under `configuration` in Max's preferences.
+One `@Observable` settings store, saved as a JSON value under `configuration` in Dock Max's preferences.
 The overlay controller consumes an `Observations` stream of the store, the Dock observer, the Dock
 reader, and the reveal tracker, and applies each snapshot to the window. Settings from Max 1.0 migrate
 on first launch.
