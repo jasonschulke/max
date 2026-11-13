@@ -451,7 +451,8 @@ private struct BarPreview: View {
             }
             HStack(spacing: 5) {
                 ForEach(Self.apps, id: \.self) { path in
-                    Image(nsImage: NSWorkspace.shared.icon(forFile: path))
+                    // Resolved, so symlinked apps (like Safari) don't get an alias arrow.
+                    Image(nsImage: NSWorkspace.shared.icon(forFile: URL(fileURLWithPath: path).resolvingSymlinksInPath().path))
                         .resizable()
                         .frame(width: 26, height: 26)
                 }
