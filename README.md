@@ -81,7 +81,7 @@ While you drag, Dock Max steps aside so you can see the Dock's own feedback.
   <img src="docs/images/settings-appearance-dark.png" width="400" alt="Appearance settings in dark mode">
   <img src="docs/images/settings-profiles-dark.png" width="400" alt="Dock profiles in dark mode">
 </p>
-<p align="center"><img src="docs/images/settings-windows.png" width="400" alt="Window corner settings"></p>
+<p align="center"><img src="docs/images/settings-windows.png" width="400" alt="Window corner and menu bar settings"></p>
 
 ## Good to know
 
