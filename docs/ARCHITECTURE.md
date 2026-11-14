@@ -64,6 +64,18 @@ It's the same as `defaults write -g NSConvolutionOverride1 -float 0.01`; turning
 deletes the key. An exception writes the key to one app's own domain, which takes precedence. Each app
 reads it once at launch for all its windows.
 
+## Menu bar
+
+System Settings › Menu Bar's auto-hide picker sets two flags macOS acts on: hiding the menu bar on the
+desktop, applied live through SkyLight's private `CGSSetMenuBarAutohideEnabled` and saved as the global
+`_HIHideMenuBar` (the call doesn't save it, so Dock Max writes it), and the global default
+`AppleMenuBarVisibleInFullscreen`. Dock Max sets both, records the
+choice as `AutoHideMenuBarOption` in `com.apple.controlcenter` so System Settings' picker agrees, and posts the
+`AppleInterfaceMenuBarHidingChangedNotification` and `AppleInterfaceFullScreenMenuBarVisibilityChangedNotification`
+that System Settings posts, which it also listens for. The background is `SLSSetMenuBarUseBlurredAppearance`
+(the global `SLSMenuBarUseBlurredAppearance`). The calls are looked up at run time, as for Dock size.
+Measured on macOS 27.
+
 ## State
 
 One `@Observable` settings store, saved as a JSON value under `configuration` in Dock Max's preferences.
@@ -76,9 +88,10 @@ on first launch.
 ```
 Max/
 ├── App/        MaxApp (menu bar extra + Settings scene), AppDelegate
-├── Models/     Pure, tested: OverlayConfiguration, DockGeometry, DockSkin, DockPinning, WindowCornerRadius, RGBAColor
+├── Models/     Pure, tested: OverlayConfiguration, DockGeometry, DockSkin, DockPinning, WindowCornerRadius, MenuBarAutoHide,
+│               RGBAColor
 ├── Services/   SettingsStore, DockObserver, DockSkinTracker, DockProfiles, DockSize, DockPinner, TrashWatcher, IdleWatcher,
-│               WindowCornerOverride, DockRevealTracker, GlobalHotKey, LaunchAtLogin
+│               WindowCornerOverride, MenuBarSettings, DockRevealTracker, GlobalHotKey, LaunchAtLogin
 ├── Overlay/    OverlayWindow, OverlayBackdropView, OverlayController, DockSkinView
 ├── Settings/   SettingsView (with its section dock), DockProfilesView
 └── Resources/  Info.plist, Assets.xcassets, Max.icns

@@ -30,6 +30,8 @@ Requires macOS 26 or later.
   push the pointer against.
 - **Window corners.** Set the corner radius of every app's windows, down to square, with per-app
   exceptions.
+- **Menu bar.** Choose when the menu bar hides (always, on the desktop only, in full screen only, or never)
+  and whether it shows a background, the same settings as System Settings › Menu Bar.
 - **Screen care.** A bar that never moves can leave a ghost on LCDs. Dock Max shifts its icons by a pixel
   every few minutes and can dim the bar while you're away.
 - **Menu bar app.** ⌃⌥⌘M toggles the bar from anywhere; Dock Max can launch at login. Settings come in
@@ -70,7 +72,7 @@ Settings has a dock of its own along the bottom: a tile per section (⌘1–⌘6
 | Dock | Draw over the Dock; Dock size, icon size, and extra height; running indicators, badges, launch bounces, and the full Trash; screen care (icon drift, dim when idle); which display the Dock stays on; auto-hide |
 | Appearance | A live preview; Liquid Glass, Clear Glass, Blur, or Solid; opacity, corner radius, and color |
 | Profiles | Save the Dock as a profile, then use, rename, or delete it; add spacers; restore the original Dock |
-| Windows | Window corner radius, down to square, with per-app exceptions; relaunch apps to apply |
+| Windows | Window corner radius, down to square, with per-app exceptions; relaunch apps to apply; menu bar auto-hide and background |
 
 Rearranging happens in the Dock itself: drag icons to reorder, off the Dock to remove, or onto it to add.
 While you drag, Dock Max steps aside so you can see the Dock's own feedback.

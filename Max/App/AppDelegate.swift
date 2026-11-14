@@ -10,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let dockProfiles = DockProfiles()
     let settingsNavigation = SettingsNavigation()
     let windowCorners = WindowCornerOverride()
+    let menuBar = MenuBarSettings()
     let dockSize = DockSize()
     let pinner = DockPinner()
     let trash = TrashWatcher()

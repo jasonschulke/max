@@ -16,7 +16,8 @@ struct MaxApp: App {
             SettingsView(
                 store: appDelegate.store, navigation: appDelegate.settingsNavigation, loginItem: appDelegate.loginItem,
                 skin: appDelegate.skinTracker, dockSize: appDelegate.dockSize, pinner: appDelegate.pinner,
-                trash: appDelegate.trash, profiles: appDelegate.dockProfiles, windowCorners: appDelegate.windowCorners
+                trash: appDelegate.trash, profiles: appDelegate.dockProfiles, windowCorners: appDelegate.windowCorners,
+                menuBar: appDelegate.menuBar
             )
         }
         .windowResizability(.contentSize)
