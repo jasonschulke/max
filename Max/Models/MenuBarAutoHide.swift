@@ -10,6 +10,8 @@ nonisolated enum MenuBarAutoHide: Int, CaseIterable, Identifiable, Sendable {
     case inFullScreenOnly = 2
     case never = 3
 
+    /// Global default macOS saves "hide on the desktop" in; SkyLight's call applies the flag but doesn't write it.
+    static let hidesOnDesktopKey = "_HIHideMenuBar"
     /// Global default; missing means the menu bar hides in full-screen apps.
     static let visibleInFullScreenKey = "AppleMenuBarVisibleInFullscreen"
     /// Where System Settings keeps its picker's choice.
