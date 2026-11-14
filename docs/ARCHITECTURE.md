@@ -69,11 +69,13 @@ reads it once at launch for all its windows.
 System Settings › Menu Bar's auto-hide picker sets two flags macOS acts on: hiding the menu bar on the
 desktop, applied live through SkyLight's private `CGSSetMenuBarAutohideEnabled` and saved as the global
 `_HIHideMenuBar` (the call doesn't save it, so Dock Max writes it), and the global default
-`AppleMenuBarVisibleInFullscreen`. Dock Max sets both, records the
-choice as `AutoHideMenuBarOption` in `com.apple.controlcenter` so System Settings' picker agrees, and posts the
-`AppleInterfaceMenuBarHidingChangedNotification` and `AppleInterfaceFullScreenMenuBarVisibilityChangedNotification`
-that System Settings posts, which it also listens for. The background is `SLSSetMenuBarUseBlurredAppearance`
-(the global `SLSMenuBarUseBlurredAppearance`). The calls are looked up at run time, as for Dock size.
+`AppleMenuBarVisibleInFullscreen`. Dock Max sets both, records the choice as `AutoHideMenuBarOption` in
+`com.apple.controlcenter` so System Settings' picker agrees, and posts the
+`AppleInterfaceMenuBarHidingChangedNotification` and
+`AppleInterfaceFullScreenMenuBarVisibilityChangedNotification` that System Settings posts. Dock Max also
+listens for both, and refreshes whenever it becomes active. The background is
+`SLSSetMenuBarUseBlurredAppearance` (the global `SLSMenuBarUseBlurredAppearance`). The calls are looked
+up at run time, as for Dock size.
 Measured on macOS 27.
 
 ## State
