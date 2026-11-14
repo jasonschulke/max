@@ -49,6 +49,7 @@ struct SettingsView: View {
     let trash: TrashWatcher
     let profiles: DockProfiles
     let windowCorners: WindowCornerOverride
+    let menuBar: MenuBarSettings
 
     var body: some View {
         VStack(spacing: 0) {
@@ -69,7 +70,7 @@ struct SettingsView: View {
         case .dock: DockPane(store: store, skin: skin, dockSize: dockSize, pinner: pinner, trash: trash)
         case .appearance: AppearancePane(store: store)
         case .profiles: ProfilesPane(profiles: profiles)
-        case .windows: WindowsPane(windowCorners: windowCorners)
+        case .windows: WindowsPane(windowCorners: windowCorners, menuBar: menuBar)
         case .about: AboutPane()
         }
     }
@@ -437,6 +438,7 @@ struct AppearancePane: View {
 
 struct WindowsPane: View {
     let windowCorners: WindowCornerOverride
+    let menuBar: MenuBarSettings
 
     var body: some View {
         Form {
@@ -504,8 +506,32 @@ struct WindowsPane: View {
             } footer: {
                 Text("Give an app its own radius instead of the one above. Sandboxed apps, like most App Store apps, keep their own copy of settings, so an exception may not reach them.")
             }
+
+            if menuBar.autoHide != nil || menuBar.showsBackground != nil {
+                Section {
+                    if let autoHide = menuBar.autoHide {
+                        Picker("Automatically hide and show the menu bar", selection: Binding(
+                            get: { autoHide },
+                            set: { menuBar.set($0) }
+                        )) {
+                            ForEach(MenuBarAutoHide.allCases) { Text($0.title).tag($0) }
+                        }
+                    }
+                    if let showsBackground = menuBar.showsBackground {
+                        Toggle("Show menu bar background", isOn: Binding(
+                            get: { showsBackground },
+                            set: { menuBar.setShowsBackground($0) }
+                        ))
+                    }
+                } header: {
+                    Text("Menu Bar")
+                } footer: {
+                    Text("The same settings as System Settings › Menu Bar; a change in either place shows in both.")
+                }
+            }
         }
         .themedForm()
+        .onAppear { menuBar.refresh() }
         .alert("Relaunch \(windowCorners.pendingRelaunch.count) Apps?", isPresented: Binding(
             get: { !windowCorners.pendingRelaunch.isEmpty },
             set: { if !$0 { windowCorners.cancelRelaunch() } }
