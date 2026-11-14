@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0 — unreleased
+
+- **Menu bar settings.** Choose when the menu bar hides (always, on the desktop only, in full screen only, or
+  never) and whether it shows a background, from the Windows section; the same settings as System Settings ›
+  Menu Bar.
+
 ## 2.0.0 — 2026-11-13
 
 A rewrite for macOS 26 and Liquid Glass, and a new name: Max is now Dock Max.

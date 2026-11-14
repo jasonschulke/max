@@ -30,7 +30,7 @@ Requires macOS 26 or later.
   push the pointer against.
 - **Window corners.** Set the corner radius of every app's windows, down to square, with per-app
   exceptions.
-- **Menu bar.** Choose when the menu bar hides (always, on the desktop only, in full screen only, or never)
+- **Menu bar settings.** Choose when the menu bar hides (always, on the desktop only, in full screen only, or never)
   and whether it shows a background, the same settings as System Settings › Menu Bar.
 - **Screen care.** A bar that never moves can leave a ghost on LCDs. Dock Max shifts its icons by a pixel
   every few minutes and can dim the bar while you're away.
@@ -88,8 +88,9 @@ While you drag, Dock Max steps aside so you can see the Dock's own feedback.
 - **Keep the Dock visible** (auto-hide off). As long as it's on screen, macOS keeps the bottom strip
   free, so maximized and tiled windows stop above the bar.
 - **Dock Max relies on undocumented macOS behavior**: how the Dock reports its layout, the window-corner
-  preference, and the private call System Settings uses to resize the Dock. A macOS update can change
-  any of them. Dock Max checks for each at run time and steps back when one is missing.
+  preference, and the private call System Settings uses to resize the Dock, and the private calls and
+  preferences behind the menu bar's auto-hide and background. A macOS update can change any of them. Dock Max
+  checks for each at run time and steps back when one is missing.
 - A full Dock is already shrunk to fit the screen, so *Dock size* can only make it smaller.
 - Dock Max can't move the Dock to a display itself. Push the pointer against that display's bottom edge
   once, and Dock Max keeps it there.

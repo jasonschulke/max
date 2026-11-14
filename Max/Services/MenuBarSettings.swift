@@ -32,7 +32,8 @@ final class MenuBarSettings {
         getBackground = dlsym(skyLight, "SLSGetMenuBarUseBlurredAppearance").map { unsafeBitCast($0, to: GetBackground.self) }
         setBackground = dlsym(skyLight, "SLSSetMenuBarUseBlurredAppearance").map { unsafeBitCast($0, to: SetBackground.self) }
         refresh()
-        // Posted by System Settings too, so changes made there show up here.
+        // Posted by System Settings too, so changes made there show up here. System Settings' notifications can be
+        // held back while Dock Max is inactive, and the background has none, so also refresh on coming to the front.
         for name in MenuBarAutoHide.changeNotifications {
             observers.append(DistributedNotificationCenter.default().addObserver(
                 forName: Notification.Name(name), object: nil, queue: .main
@@ -40,6 +41,11 @@ final class MenuBarSettings {
                 MainActor.assumeIsolated { self?.refresh() }
             })
         }
+        observers.append(NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refresh() }
+        })
     }
 
     func refresh() {
@@ -47,7 +53,7 @@ final class MenuBarSettings {
             var hides = false
             if getAutohide(mainConnectionID(), &hides) == 0 {
                 CFPreferencesAppSynchronize(kCFPreferencesAnyApplication)
-                let visible = CFPreferencesCopyAppValue(MenuBarAutoHide.visibleInFullScreenKey as CFString, kCFPreferencesAnyApplication) as? Bool ?? false
+                let visible = CFPreferencesGetAppBooleanValue(MenuBarAutoHide.visibleInFullScreenKey as CFString, kCFPreferencesAnyApplication, nil)
                 let option = MenuBarAutoHide(hidesOnDesktop: hides, visibleInFullScreen: visible)
                 if option != autoHide { autoHide = option }
             }
@@ -61,7 +67,10 @@ final class MenuBarSettings {
     /// Applies an option the way System Settings does, then reads back what macOS has.
     func set(_ option: MenuBarAutoHide) {
         guard let mainConnectionID, let setAutohide else { return }
-        _ = setAutohide(mainConnectionID(), option.hidesOnDesktop)
+        guard setAutohide(mainConnectionID(), option.hidesOnDesktop) == 0 else {
+            refresh()
+            return
+        }
         // The call applies the change live but doesn't save it, so apps and the next login would still read the old one.
         CFPreferencesSetAppValue(MenuBarAutoHide.hidesOnDesktopKey as CFString, NSNumber(value: option.hidesOnDesktop), kCFPreferencesAnyApplication)
         CFPreferencesSetAppValue(MenuBarAutoHide.visibleInFullScreenKey as CFString, NSNumber(value: option.visibleInFullScreen), kCFPreferencesAnyApplication)

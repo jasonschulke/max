@@ -18,6 +18,13 @@
 		81B10952D8AF272120833322 = {isa = PBXBuildFile; fileRef = C0A3423D1A222C3FE05B5488 /* DockPinning.swift */; };
 		2154666776A2B85211F565D8 = {isa = PBXBuildFile; fileRef = C0A3423D1A222C3FE05B5488 /* DockPinning.swift */; };
 		EDC2EB230DE55CE2D9625A89 = {isa = PBXBuildFile; fileRef = E0ACCC5D67ECDE00F84EB774 /* DockPinningTests.swift */; };
+		5B1E7C3A90D24F68A1C07E35 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarAutoHide.swift; sourceTree = "<group>"; };
+		8D40F2A6C13B59E7740B1A92 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarSettings.swift; sourceTree = "<group>"; };
+		1F93A5D7E2486B0C95D3E814 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarAutoHideTests.swift; sourceTree = "<group>"; };
+		A6C2E94B07F31D58B2E49C60 = {isa = PBXBuildFile; fileRef = 5B1E7C3A90D24F68A1C07E35 /* MenuBarAutoHide.swift */; };
+		62A8F3E1B5D07C94E3F18A52 = {isa = PBXBuildFile; fileRef = 5B1E7C3A90D24F68A1C07E35 /* MenuBarAutoHide.swift */; };
+		3E7B15D9A04C82F6D91A7B43 = {isa = PBXBuildFile; fileRef = 8D40F2A6C13B59E7740B1A92 /* MenuBarSettings.swift */; };
+		C94D0A27F1E65B83A07C2D19 = {isa = PBXBuildFile; fileRef = 1F93A5D7E2486B0C95D3E814 /* MenuBarAutoHideTests.swift */; };
 		249A5738E6752131C1FFBDEA = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCornerRadius.swift; sourceTree = "<group>"; };
 		AE0A236A4AD65CFD10781CA6 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCornerOverride.swift; sourceTree = "<group>"; };
 		B7123045C069279537736F07 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCornerRadiusTests.swift; sourceTree = "<group>"; };
@@ -59,6 +66,7 @@
 			isa = PBXGroup;
 			children = (
 				C0A3423D1A222C3FE05B5488 /* DockPinning.swift */,
+				5B1E7C3A90D24F68A1C07E35 /* MenuBarAutoHide.swift */,
 				249A5738E6752131C1FFBDEA /* WindowCornerRadius.swift */,
 				4FD13888F1DC16B1950A3B3E /* DockSkin.swift */,
 				917E384495E45694D7B4C5B3 /* DockGeometry.swift */,
@@ -158,8 +166,10 @@
 				7A1C3AF62E762CFF090C03F5,
 				E2626A67C7D5E22C7C121A22,
 				6154F3F86DDAA5DC770B3D0C,
+				3E7B15D9A04C82F6D91A7B43,
 				492A0B8448D4276AFAE21307,
 				81B10952D8AF272120833322,
+				A6C2E94B07F31D58B2E49C60,
 				3B5037416B6BE1D98324684A,
 				7D6DC7EDFFCB1319241F272A,
 				2CEE9174096BD15604A07601,
@@ -274,6 +284,7 @@
 			isa = PBXGroup;
 			children = (
 				E0ACCC5D67ECDE00F84EB774 /* DockPinningTests.swift */,
+				1F93A5D7E2486B0C95D3E814 /* MenuBarAutoHideTests.swift */,
 				B7123045C069279537736F07 /* WindowCornerRadiusTests.swift */,
 				E8946B2CEA9244C255465331 /* DockSkinTests.swift */,
 				5FDE3F5FE34D1B7E23EF2C7F /* DockGeometryTests.swift */,
@@ -367,6 +378,7 @@
 				F56A9DACA9299FB28422E312 /* TrashWatcher.swift */,
 				569480145A680B7C8537C78C /* DockPinner.swift */,
 				67C24D815D0B2AB955AEB6B9 /* DockSize.swift */,
+				8D40F2A6C13B59E7740B1A92 /* MenuBarSettings.swift */,
 				AE0A236A4AD65CFD10781CA6 /* WindowCornerOverride.swift */,
 				A48EA0B296036889F033DA6F /* DockProfiles.swift */,
 				0C404D75F48158B87DA65740 /* DockSkinTracker.swift */,
@@ -385,6 +397,8 @@
 			files = (
 				2154666776A2B85211F565D8,
 				EDC2EB230DE55CE2D9625A89,
+				C94D0A27F1E65B83A07C2D19,
+				62A8F3E1B5D07C94E3F18A52,
 				3ADBC824DDBFEA5E17601760,
 				735CE33A604A500CA39F7EC2,
 				2808A81F26F8AA7E91B6BF8D,
