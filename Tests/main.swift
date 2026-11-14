@@ -53,4 +53,5 @@ run([
     ("DockSkin", dockSkinTests),
     ("WindowCornerRadius", windowCornerRadiusTests),
     ("DockPinning", dockPinningTests),
+    ("MenuBarAutoHide", menuBarAutoHideTests),
 ])
