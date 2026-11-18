@@ -17,6 +17,12 @@ final class OverlayController {
     private var observationTask: Task<Void, Never>?
     private var visibilityGeneration = 0
     private var hasApplied = false
+    /// Where the window belongs, and whether it is animating there (moves then are expected).
+    private var targetFrame: CGRect?
+    private var isAnimatingFrame = false
+    private var isForcingFrame = false
+    private var lastSnapshot: Snapshot?
+    private var observers: [any NSObjectProtocol] = []
 
     private let changeDuration = 0.25
     private let dragFadeDuration = 0.12
@@ -39,6 +45,53 @@ final class OverlayController {
         dimView.alphaValue = 0
         content.addSubview(dimView)
         window.contentView = content
+
+        // macOS can move the window itself while displays are added or removed (a tablet extending the desktop),
+        // and nothing in the snapshot changes then, so put it back whenever it moves or the displays change.
+        for name in [NSWindow.didMoveNotification, NSWindow.didResizeNotification] {
+            observers.append(NotificationCenter.default.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.restoreFrame() }
+            })
+        }
+        observers.append(NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.restoreFrameAfterDisplayChange() }
+        })
+    }
+
+    private func restoreFrame() {
+        guard let targetFrame, !isAnimatingFrame, !isForcingFrame, window.frame != targetFrame else { return }
+        // Not from inside the move notification itself: a move made there can be dropped by the window server
+        // while AppKit goes on reporting the new frame, leaving the bar a Dock-height up.
+        Task { [weak self] in self?.forceFrame() }
+    }
+
+    /// Puts the window where it belongs even when AppKit already reports it there: a one-point nudge and back
+    /// makes the window server really move it.
+    private func forceFrame() {
+        guard let targetFrame, !isAnimatingFrame else { return }
+        isForcingFrame = true
+        window.setFrame(targetFrame.offsetBy(dx: 0, dy: 1), display: false)
+        window.setFrame(targetFrame, display: true)
+        isForcingFrame = false
+    }
+
+    /// Display changes settle over several seconds (the Dock itself goes away and comes back), and the bar can
+    /// end up out of place with nothing in the snapshot changing. So for the next few seconds, re-read the Dock and
+    /// lay the bar out again from scratch, as a click on the Dock would.
+    private func restoreFrameAfterDisplayChange() {
+        restoreFrame()
+        Task { [weak self] in
+            for delay in [300, 700, 1000, 1500, 2500, 4000] {
+                try? await Task.sleep(for: .milliseconds(delay))
+                guard let self else { return }
+                self.dockObserver.refresh()
+                self.skinTracker.refresh()
+                if let snapshot = self.lastSnapshot { self.apply(snapshot) }
+                self.forceFrame()
+            }
+        }
     }
 
     private struct Snapshot: Equatable {
@@ -92,6 +145,7 @@ final class OverlayController {
         let config = snapshot.configuration
         let animated = hasApplied && config.animationsEnabled && !snapshot.isInteracting
         defer { hasApplied = true }
+        lastSnapshot = snapshot
 
         let thickness = DockGeometry.thickness(
             configuration: config, dock: snapshot.dock,
@@ -167,13 +221,20 @@ final class OverlayController {
     }
 
     private func setFrame(_ frame: CGRect, animated: Bool) {
+        targetFrame = frame
         guard window.frame != frame else { return }
         if animated, window.isVisible {
-            NSAnimationContext.runAnimationGroup { context in
+            isAnimatingFrame = true
+            NSAnimationContext.runAnimationGroup({ context in
                 context.duration = changeDuration
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 window.animator().setFrame(frame, display: true)
-            }
+            }, completionHandler: { [weak self] in
+                MainActor.assumeIsolated {
+                    self?.isAnimatingFrame = false
+                    self?.restoreFrame()
+                }
+            })
         } else {
             window.setFrame(frame, display: true)
         }
@@ -188,6 +249,8 @@ final class OverlayController {
             if !window.isVisible {
                 window.alphaValue = animated ? 0 : target
                 window.orderFrontRegardless()
+                // macOS can shift a window as it comes back on screen, out of the Dock's strip; put it back.
+                Task { [weak self] in self?.forceFrame() }
             }
             if animated {
                 NSAnimationContext.runAnimationGroup { context in

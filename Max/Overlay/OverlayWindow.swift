@@ -23,6 +23,10 @@ final class OverlayWindow: NSWindow {
         if level != newLevel { level = newLevel }
     }
 
+    /// AppKit nudges windows back inside a screen's visible area when displays change, which would lift the bar
+    /// off the Dock's strip (the strip is outside the visible area). The bar goes exactly where it is put.
+    override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect { frameRect }
+
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 }

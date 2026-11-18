@@ -5,7 +5,8 @@
 - **The Dock stays put when displays change.** macOS moves the Dock by itself when a display is added or
   removed (a tablet extending the desktop, for one). Dock Max now notices and calls it back to the display
   you chose, once the pointer is resting, so "keep the Dock on one display" holds through display changes too.
-
+- **The bar stays on the Dock when displays change.** Adding or removing a display could leave the bar sitting
+  one Dock-height above the Dock, with the real Dock showing beneath it. The bar now goes back over the Dock.
 - **Menu bar settings.** Choose when the menu bar hides (always, on the desktop only, in full screen only, or
   never) and whether it shows a background, from the Windows section; the same settings as System Settings ›
   Menu Bar.
