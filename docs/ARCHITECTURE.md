@@ -55,6 +55,11 @@ read from `CGEventSource.secondsSinceLastEventType` once a second.
 - **Keeping the Dock on a display.** macOS moves the Dock to whichever display's Dock edge the pointer is
   pushed against (with *Displays have separate Spaces* on). An event tap stops the pointer two points
   short of that edge on every other display, except where another display continues past it.
+  macOS also moves the Dock by itself when displays come and go (a tablet extending the desktop, say).
+  After every display or Dock change, Dock Max reads the frame of the Dock's list every half second for half a minute; if the
+  Dock is on another display, it waits for the pointer to rest for a second, then does what a hand would:
+  warps the pointer to the middle of the widest open stretch of the pinned display's Dock edge, posts
+  pointer moves pushing past it, and puts the pointer back. At most three pushes per change.
 
 ## Window corners
 
