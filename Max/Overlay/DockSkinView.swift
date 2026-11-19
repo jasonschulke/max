@@ -62,9 +62,12 @@ final class DockSkinView: NSView {
         needsDisplay = true
     }
 
-    @objc private func dayChanged() {
-        calendarIcon = nil
-        needsDisplay = true
+    /// The system posts the day change from a background queue, so this hops to the main actor itself.
+    @objc nonisolated private func dayChanged() {
+        Task { @MainActor in
+            calendarIcon = nil
+            needsDisplay = true
+        }
     }
 
     // MARK: Drawing
